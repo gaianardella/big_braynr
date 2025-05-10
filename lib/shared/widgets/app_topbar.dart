@@ -63,12 +63,12 @@ class AppTopBar extends StatelessWidget {
         if (isMobile) const SizedBox(width: 16),
         
         // Logo Braynr dall'immagine assets
-        Image.asset(
-          'assets/images/braynr_logo.png', 
-          height: 36,
-          // Assicura che il logo abbia un aspetto buono su sfondo scuro
-          filterQuality: FilterQuality.high,
-        ),
+        // Image.asset(
+        //   'assets/images/braynr_logo.png', 
+        //   height: 36,
+        //   // Assicura che il logo abbia un aspetto buono su sfondo scuro
+        //   filterQuality: FilterQuality.high,
+        // ),
         
         // Rimuoviamo il Container con l'icona e il testo "BraynR Studio" 
         // poiché li stiamo sostituendo con il logo dell'immagine

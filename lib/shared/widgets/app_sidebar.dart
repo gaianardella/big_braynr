@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
-import '../../features/courses/models/course_model.dart';
+import '../../screens/course_model.dart';
 
 // Provider per la sezione selezionata - inizializzato con 'library'
 final selectedSectionProvider = StateProvider<String>((ref) => 'library');
@@ -182,7 +182,7 @@ class _SectionItem extends StatelessWidget {
       case 'Planner':
         sectionColor = AppColors.notes;
         break;
-      case 'Città':
+      case 'Mappa':
         sectionColor = AppColors.mindMaps;
         break;
       default:
