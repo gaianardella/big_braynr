@@ -109,26 +109,26 @@ class DashboardScreen extends ConsumerWidget {
                 ),
 
                 // Chapter Progress Card con navigazione a StudyWorkspaceScreen
-                _buildCompactStatCard(
-                  context,
-                  title: 'Progresso Capitolo',
-                  value: '${(chapterProgress * 100).toStringAsFixed(0)}%',
-                  icon: Icons.book,
-                  color: Colors.greenAccent,
-                  progress: chapterProgress,
-                  description: 'completato',
-                  onTap: () {
-                    // Naviga direttamente a StudyWorkspaceScreen quando si clicca sulla card
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => StudyWorkspaceScreen(
-                          courseId: selectedCourseInfo.id,
-                          chapterId: 'current_chapter', // Qui puoi passare l'ID del capitolo corrente
-                        ),
-                      ),
-                    );
-                  },
-                ),
+                // Nel metodo _buildCompactStatCard dentro DashboardScreen
+_buildCompactStatCard(
+  context,
+  title: 'Progresso Capitolo',
+  value: '${(chapterProgress * 100).toStringAsFixed(0)}%',
+  icon: Icons.book,
+  color: Colors.greenAccent,
+  progress: chapterProgress,
+  description: 'completato',
+  onTap: () {
+    // Naviga a PDFViewerScreen passando il percorso del PDF specifico
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ChapterScreen(
+          pdfPath: 'assets/pdf/Proposal_Google_Summer_of_Code.pdf', // Sostituisci con il percorso del tuo PDF
+        ),
+      ),
+    );
+  },
+),
 
                 // Daily Activity Card
                 _buildCombinedProgressAndActivities(
