@@ -65,14 +65,16 @@ String _getLessonType(int index) {
 
 // Provider per i capitoli del corso selezionato
 final chaptersProvider = Provider.family<List<ChapterModel>, String>((ref, courseId) {
-  // Colori fissi per i capitoli
+  // Colori brillanti per i capitoli
   const List<Color> chapterColors = [
-    Colors.blueAccent,
-    Colors.orangeAccent,
-    Colors.greenAccent,
-    Colors.purpleAccent,
-    Colors.redAccent,
-    Colors.tealAccent,
+    Color(0xFF00B0FF), // Bright Sky Blue
+    Color(0xFFFF4081), // Bright Pink
+    Color(0xFF76FF03), // Bright Lime Green
+    Color(0xFFD500F9), // Bright Purple
+    Color(0xFFFF1744), // Vivid Red
+    Color(0xFF00E5FF), // Bright Cyan
+    Color(0xFFFFEA00), // Bright Yellow
+    Color(0xFF00C853), // Bright Green
   ];
   
   // Lista di capitoli di base
