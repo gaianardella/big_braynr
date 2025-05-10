@@ -1,0 +1,1 @@
+ /Users/gaianardella/Progetti/big_braynr/.dart_tool/flutter_build/720c8a625ca2b321b6f5cdc7d9a47bac/native_assets.yaml: 
