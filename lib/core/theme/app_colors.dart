@@ -109,4 +109,6 @@ class AppColors {
   static Color getTextColorOnBackground(bool isDarkTheme) {
     return isDarkTheme ? textLight : textDark;
   }
+
+  static const Color backgroundDark = Color(0xFF121212); // O qualsiasi valore di colore scuro preferisci
 }

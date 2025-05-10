@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/theme/app_colors.dart';
-import '../../shared/widgets/app_sidebar.dart';
+import '../../core/providers/course_providers.dart';
 import 'course_model.dart';
 
 class LibraryScreen extends ConsumerWidget {

@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme/app_colors.dart';
 import 'screens/library_screen.dart';
 import 'screens/planning_screen.dart';
-import 'screens/dashboard_screen.dart';
+// import 'screens/dashboard_screen.dart';
 // import 'features/map/screens/map_screen.dart';
 import 'shared/widgets/app_sidebar.dart';
 import 'shared/widgets/app_topbar.dart';
@@ -137,7 +137,7 @@ class AppShell extends ConsumerWidget {
   Widget _getScreenForSection(String section, String? selectedCourseId) {
     switch (section) {
       case 'library':
-        return const DashboardScreen();
+        return const LibraryScreen();
       case 'planner':
         return const StudyPlannerScreen();
       // case 'map':
