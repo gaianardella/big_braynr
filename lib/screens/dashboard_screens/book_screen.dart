@@ -46,15 +46,15 @@ class ChapterModel {
     required this.lessons,
   });
 
-  double get progressPercentage => totalLessons > 0 
-      ? completedLessons / totalLessons 
-      : 0.0;
+  double get progressPercentage =>
+      totalLessons > 0 ? completedLessons / totalLessons : 0.0;
 
   bool get isCompleted => completedLessons == totalLessons;
 
   bool get isStarted => completedLessons > 0;
 
-  bool get isLocked => false; // In futuro si può implementare una logica di sblocco
+  bool get isLocked =>
+      false; // In futuro si può implementare una logica di sblocco
 }
 
 // Funzione helper per generare tipi di lezione alternati
@@ -64,7 +64,8 @@ String _getLessonType(int index) {
 }
 
 // Provider per i capitoli del corso selezionato
-final chaptersProvider = Provider.family<List<ChapterModel>, String>((ref, courseId) {
+final chaptersProvider =
+    Provider.family<List<ChapterModel>, String>((ref, courseId) {
   // Colori brillanti per i capitoli
   const List<Color> chapterColors = [
     Color(0xFF00B0FF), // Bright Sky Blue
@@ -76,7 +77,7 @@ final chaptersProvider = Provider.family<List<ChapterModel>, String>((ref, cours
     Color(0xFFFFEA00), // Bright Yellow
     Color(0xFF00C853), // Bright Green
   ];
-  
+
   // Lista di capitoli di base
   final List<Map<String, dynamic>> baseChapters = [
     {
@@ -134,13 +135,13 @@ final chaptersProvider = Provider.family<List<ChapterModel>, String>((ref, cours
       'estimatedDuration': const Duration(minutes: 50),
     },
   ];
-  
+
   // Creiamo i capitoli con i colori assegnati e le lezioni
   return List.generate(baseChapters.length, (index) {
     final chapter = baseChapters[index];
     // Assegniamo un colore fisso dal nostro array, ciclando se necessario
     final chapterColor = chapterColors[index % chapterColors.length];
-    
+
     // Generiamo alcune lezioni di esempio
     final List<LessonModel> lessons = List.generate(
       chapter['totalLessons'],
@@ -152,7 +153,7 @@ final chaptersProvider = Provider.family<List<ChapterModel>, String>((ref, cours
         type: _getLessonType(lessonIndex),
       ),
     );
-    
+
     // Restituiamo il capitolo completo
     return ChapterModel(
       id: chapter['id'],
@@ -190,14 +191,18 @@ class ChapterProgressScreen extends ConsumerWidget {
             icon: Icons.book,
           ),
         );
-    
+
     final chapters = ref.watch(chaptersProvider(courseId));
-    
+
     // Calcola le statistiche generali
-    final totalLessons = chapters.fold<int>(0, (sum, chapter) => sum + chapter.totalLessons);
-    final completedLessons = chapters.fold<int>(0, (sum, chapter) => sum + chapter.completedLessons);
-    final overallProgress = totalLessons > 0 ? completedLessons / totalLessons : 0.0;
-    final completedChapters = chapters.where((chapter) => chapter.isCompleted).length;
+    final totalLessons =
+        chapters.fold<int>(0, (sum, chapter) => sum + chapter.totalLessons);
+    final completedLessons =
+        chapters.fold<int>(0, (sum, chapter) => sum + chapter.completedLessons);
+    final overallProgress =
+        totalLessons > 0 ? completedLessons / totalLessons : 0.0;
+    final completedChapters =
+        chapters.where((chapter) => chapter.isCompleted).length;
 
     return Scaffold(
       appBar: AppBar(
@@ -249,7 +254,7 @@ class ChapterProgressScreen extends ConsumerWidget {
             chapters.length,
             chapters,
           ),
-          
+
           // Chapter list
           Expanded(
             child: _buildChaptersList(context, chapters, course, ref),
@@ -270,13 +275,11 @@ class ChapterProgressScreen extends ConsumerWidget {
     List<ChapterModel> chapters,
   ) {
     // Calculate remaining time
-    final remainingTime = chapters
-        .where((c) => !c.isCompleted)
-        .fold<Duration>(
+    final remainingTime = chapters.where((c) => !c.isCompleted).fold<Duration>(
           Duration.zero,
-          (sum, chapter) => sum + (
-            chapter.estimatedDuration * (1 - chapter.progressPercentage)
-          ),
+          (sum, chapter) =>
+              sum +
+              (chapter.estimatedDuration * (1 - chapter.progressPercentage)),
         );
 
     return Container(
@@ -293,9 +296,9 @@ class ChapterProgressScreen extends ConsumerWidget {
               color: AppColors.textLight,
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Progress bar
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -321,9 +324,7 @@ class ChapterProgressScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-              
               const SizedBox(height: 8),
-              
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
@@ -333,9 +334,7 @@ class ChapterProgressScreen extends ConsumerWidget {
                   minHeight: 8,
                 ),
               ),
-              
               const SizedBox(height: 4),
-              
               Text(
                 '$completedLessons/$totalLessons lezioni completate',
                 style: const TextStyle(
@@ -345,9 +344,9 @@ class ChapterProgressScreen extends ConsumerWidget {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Stats cards
           Row(
             children: [
@@ -376,7 +375,7 @@ class ChapterProgressScreen extends ConsumerWidget {
       ),
     );
   }
-  
+
   Widget _buildStatCard({
     required IconData icon,
     required String title,
@@ -450,13 +449,13 @@ class ChapterProgressScreen extends ConsumerWidget {
   }
 
   Widget _buildChaptersList(
-    BuildContext context, 
-    List<ChapterModel> chapters, 
+    BuildContext context,
+    List<ChapterModel> chapters,
     CourseModel course,
     WidgetRef ref,
   ) {
     final expandedChapters = ref.watch(expandedChaptersProvider);
-    
+
     return ListView.separated(
       padding: const EdgeInsets.all(16),
       itemCount: chapters.length,
@@ -464,10 +463,10 @@ class ChapterProgressScreen extends ConsumerWidget {
       itemBuilder: (context, index) {
         final chapter = chapters[index];
         final isExpanded = expandedChapters.contains(chapter.id);
-        
+
         return _buildExpandableChapterCard(
-          context, 
-          chapter, 
+          context,
+          chapter,
           course,
           isExpanded,
           ref,
@@ -475,16 +474,16 @@ class ChapterProgressScreen extends ConsumerWidget {
       },
     );
   }
-  
+
   Widget _buildExpandableChapterCard(
-    BuildContext context, 
-    ChapterModel chapter, 
+    BuildContext context,
+    ChapterModel chapter,
     CourseModel course,
     bool isExpanded,
     WidgetRef ref,
   ) {
     final isInProgress = chapter.isStarted && !chapter.isCompleted;
-    
+
     return Column(
       children: [
         // Card principale con sfumatura di colore basata sul colore del capitolo
@@ -493,10 +492,10 @@ class ChapterProgressScreen extends ConsumerWidget {
             // Toggle espansione del capitolo
             final expandedChapters = ref.read(expandedChaptersProvider);
             if (isExpanded) {
-              ref.read(expandedChaptersProvider.notifier).state = 
+              ref.read(expandedChaptersProvider.notifier).state =
                   Set.from(expandedChapters)..remove(chapter.id);
             } else {
-              ref.read(expandedChaptersProvider.notifier).state = 
+              ref.read(expandedChaptersProvider.notifier).state =
                   Set.from(expandedChapters)..add(chapter.id);
             }
           },
@@ -512,7 +511,7 @@ class ChapterProgressScreen extends ConsumerWidget {
               ),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: chapter.isCompleted 
+                color: chapter.isCompleted
                     ? chapter.color.withOpacity(0.5)
                     : AppColors.border,
                 width: chapter.isCompleted ? 1.5 : 1,
@@ -554,16 +553,16 @@ class ChapterProgressScreen extends ConsumerWidget {
                                   style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
-                                    color: isInProgress 
-                                        ? chapter.color 
+                                    color: isInProgress
+                                        ? chapter.color
                                         : AppColors.textMedium,
                                   ),
                                 ),
                         ),
                       ),
-                      
+
                       const SizedBox(width: 16),
-                      
+
                       // Chapter title and details
                       Expanded(
                         child: Column(
@@ -574,8 +573,8 @@ class ChapterProgressScreen extends ConsumerWidget {
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: chapter.isCompleted 
-                                    ? chapter.color 
+                                color: chapter.isCompleted
+                                    ? chapter.color
                                     : AppColors.textLight,
                               ),
                             ),
@@ -592,16 +591,18 @@ class ChapterProgressScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      
+
                       // Expand/collapse icon
                       Icon(
-                        isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                        isExpanded
+                            ? Icons.keyboard_arrow_up
+                            : Icons.keyboard_arrow_down,
                         color: chapter.color,
                       ),
                     ],
                   ),
                 ),
-                
+
                 // Progress bar
                 Container(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -624,16 +625,16 @@ class ChapterProgressScreen extends ConsumerWidget {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: chapter.isCompleted 
-                                  ? chapter.color 
+                              color: chapter.isCompleted
+                                  ? chapter.color
                                   : AppColors.textMedium,
                             ),
                           ),
                         ],
                       ),
-                      
+
                       const SizedBox(height: 8),
-                      
+
                       // Progress bar
                       ClipRRect(
                         borderRadius: BorderRadius.circular(4),
@@ -644,9 +645,9 @@ class ChapterProgressScreen extends ConsumerWidget {
                           minHeight: 6,
                         ),
                       ),
-                      
+
                       const SizedBox(height: 12),
-                      
+
                       // Last activity and time
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -669,7 +670,6 @@ class ChapterProgressScreen extends ConsumerWidget {
                                 fontStyle: FontStyle.italic,
                               ),
                             ),
-                          
                           Text(
                             _formatDuration(chapter.estimatedDuration),
                             style: const TextStyle(
@@ -686,14 +686,13 @@ class ChapterProgressScreen extends ConsumerWidget {
             ),
           ),
         ),
-        
+
         // Lezioni espandibili
-        if (isExpanded) 
-          _buildLessonsList(context, chapter),
+        if (isExpanded) _buildLessonsList(context, chapter),
       ],
     );
   }
-  
+
   Widget _buildLessonsList(BuildContext context, ChapterModel chapter) {
     // Container per le lezioni che appare quando il capitolo è espanso
     return AnimatedContainer(
@@ -722,8 +721,9 @@ class ChapterProgressScreen extends ConsumerWidget {
       ),
     );
   }
-  
-  Widget _buildLessonItem(BuildContext context, LessonModel lesson, Color chapterColor) {
+
+  Widget _buildLessonItem(
+      BuildContext context, LessonModel lesson, Color chapterColor) {
     // Icona in base al tipo di lezione
     IconData lessonIcon;
     switch (lesson.type) {
@@ -745,7 +745,7 @@ class ChapterProgressScreen extends ConsumerWidget {
       default:
         lessonIcon = Icons.book_outlined;
     }
-    
+
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
       leading: Container(
@@ -766,7 +766,8 @@ class ChapterProgressScreen extends ConsumerWidget {
         style: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w500,
-          color: lesson.isCompleted ? AppColors.textLight : AppColors.textMedium,
+          color:
+              lesson.isCompleted ? AppColors.textLight : AppColors.textMedium,
           decoration: lesson.isCompleted ? TextDecoration.none : null,
         ),
       ),
@@ -794,11 +795,11 @@ class ChapterProgressScreen extends ConsumerWidget {
       },
     );
   }
-  
+
   String _formatLastStudied(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
-    
+
     if (difference.inDays == 0) {
       return 'Oggi';
     } else if (difference.inDays == 1) {
@@ -809,7 +810,7 @@ class ChapterProgressScreen extends ConsumerWidget {
       return DateFormat('d MMM').format(date);
     }
   }
-  
+
   String _formatDuration(Duration duration) {
     if (duration.inMinutes < 60) {
       return '${duration.inMinutes} min';
@@ -823,11 +824,11 @@ class ChapterProgressScreen extends ConsumerWidget {
       }
     }
   }
-  
+
   String _formatRemainingTime(Duration duration) {
     final hours = duration.inHours;
     final minutes = duration.inMinutes % 60;
-    
+
     if (hours == 0) {
       return '$minutes min';
     } else if (minutes == 0) {
