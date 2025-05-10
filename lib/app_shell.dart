@@ -3,16 +3,40 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io' show Platform;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme/app_colors.dart';
-import 'features/flashcards/screens/flashcards_screen.dart';
-// import 'features/notes/screens/notes_screen.dart';
-// import 'features/mind_maps/screens/mind_maps_screen.dart';
-// import 'features/quizzes/screens/quizzes_screen.dart';
-// import 'features/keywords/screens/keywords_screen.dart';
+import 'features/library/screens/library_screen.dart';
+// import 'features/planner/screens/planner_screen.dart';
+// import 'features/map/screens/map_screen.dart';
 import 'shared/widgets/app_sidebar.dart';
 import 'shared/widgets/app_topbar.dart';
+import '../../../features/courses/models/course_model.dart';
 
-// Provider per gestire l'indice della tab selezionata
-final selectedTabProvider = StateProvider<int>((ref) => 0);
+
+// Provider con lista mock di corsi
+final coursesProvider = Provider<List<CourseModel>>((ref) {
+  return [
+    CourseModel(
+      id: 'math',
+      name: 'Matematica',
+      icon: Icons.calculate,
+      color: Colors.blue,
+    ),
+    CourseModel(
+      id: 'history',
+      name: 'Storia',
+      icon: Icons.book,
+      color: Colors.green,
+    ),
+    CourseModel(
+      id: 'science',
+      name: 'Scienze',
+      icon: Icons.science,
+      color: Colors.deepPurple,
+    ),
+  ];
+});
+
+// Provider per corso selezionato
+final selectedCourseProvider = StateProvider<String?>((ref) => null);
 
 class AppShell extends ConsumerWidget {
   const AppShell({super.key});
@@ -31,37 +55,32 @@ class AppShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selectedTabIndex = ref.watch(selectedTabProvider);
+    final selectedSection = ref.watch(selectedSectionProvider);
+    final selectedCourseId = ref.watch(selectedCourseProvider);
     final isMobile = _isMobileDevice(context);
-
+    
     return Scaffold(
       backgroundColor: AppColors.darkBackground,
       body: isMobile
-          ? _buildMobileLayout(context, selectedTabIndex, ref)
-          : _buildDesktopLayout(context, selectedTabIndex, ref),
+          ? _buildMobileLayout(context, selectedSection, selectedCourseId, ref)
+          : _buildDesktopLayout(context, ref, selectedSection, selectedCourseId),
       // Barra di navigazione inferiore (solo per mobile)
-      bottomNavigationBar: isMobile ? _buildBottomNavBar(context, selectedTabIndex, ref) : null,
-      // Floating Action Button con stile Braynr
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Azione per creare nuovo contenuto basato sulla tab attuale
-          _showCreateContentDialog(context, selectedTabIndex);
-        },
-        backgroundColor: AppColors.primaryBlue,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
+      bottomNavigationBar: isMobile ? _buildBottomNavBar(context, selectedSection, ref) : null,
+      // Floating Action Button
+      floatingActionButton: _buildFloatingActionButton(context, selectedSection, selectedCourseId),
+      // Drawer per mobile
+      drawer: isMobile ? const Drawer(
+        child: AppSidebar(),
+      ) : null,
     );
   }
 
   // Layout desktop con sidebar
-  Widget _buildDesktopLayout(BuildContext context, int selectedTabIndex, WidgetRef ref) {
+  Widget _buildDesktopLayout(BuildContext context, WidgetRef ref, String selectedSection, String? selectedCourseId) {
     return Row(
       children: [
         // Sidebar di navigazione
-        AppSidebar(
-          selectedIndex: selectedTabIndex,
-          onIndexChanged: (index) => ref.read(selectedTabProvider.notifier).state = index,
-        ),
+        const AppSidebar(),
         
         // Area contenuto principale
         Expanded(
@@ -72,7 +91,7 @@ class AppShell extends ConsumerWidget {
               
               // Contenuto principale
               Expanded(
-                child: _buildMainContent(selectedTabIndex),
+                child: _buildMainContent(selectedSection, selectedCourseId, ref),
               ),
             ],
           ),
@@ -82,7 +101,7 @@ class AppShell extends ConsumerWidget {
   }
 
   // Layout mobile senza sidebar
-  Widget _buildMobileLayout(BuildContext context, int selectedTabIndex, WidgetRef ref) {
+  Widget _buildMobileLayout(BuildContext context, String selectedSection, String? selectedCourseId, WidgetRef ref) {
     return Column(
       children: [
         // Barra superiore per mobile
@@ -90,34 +109,37 @@ class AppShell extends ConsumerWidget {
         
         // Contenuto principale
         Expanded(
-          child: _buildMainContent(selectedTabIndex),
+          child: _buildMainContent(selectedSection, selectedCourseId, ref),
         ),
       ],
     );
   }
 
-  // Contenuto principale dell'applicazione
-  Widget _buildMainContent(int selectedTabIndex) {
+  // Contenuto principale dell'applicazione in base alla sezione selezionata
+  Widget _buildMainContent(String selectedSection, String? selectedCourseId, WidgetRef ref) {
     return Container(
-      // Aggiunto un padding per migliorare l'aspetto visivo
       padding: const EdgeInsets.all(16),
-      // Impostato il colore di sfondo principale per il contenuto
       color: AppColors.darkBackground,
-      child: IndexedStack(
-        index: selectedTabIndex,
-        children: const [
-          FlashcardsScreen(),
-          // NotesScreen(),
-          // MindMapsScreen(),
-          // QuizzesScreen(),
-          // KeywordsScreen(),
-        ],
-      ),
+      child: _getScreenForSection(selectedSection, selectedCourseId),
     );
   }
+  
+  // Ritorna lo schermo corretto in base alla sezione selezionata
+  Widget _getScreenForSection(String section, String? selectedCourseId) {
+    switch (section) {
+      case 'library':
+        return const LibraryScreen();
+      // case 'planner':
+      //   return const PlannerScreen();
+      // case 'map':
+      //   return const MapScreen();
+      default:
+        return const LibraryScreen();
+    }
+  }
 
-  // Barra di navigazione inferiore per mobile con tema scuro
-  Widget _buildBottomNavBar(BuildContext context, int selectedIndex, WidgetRef ref) {
+  // Barra di navigazione inferiore per mobile
+  Widget _buildBottomNavBar(BuildContext context, String selectedSection, WidgetRef ref) {
     return Container(
       height: 70,
       decoration: BoxDecoration(
@@ -134,64 +156,94 @@ class AppShell extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _BottomNavItem(
-            icon: Icons.view_carousel_outlined,
-            label: 'Flashcards',
-            color: AppColors.flashcards,
-            isSelected: selectedIndex == 0,
-            onTap: () => ref.read(selectedTabProvider.notifier).state = 0,
+            icon: Icons.book_outlined,
+            label: 'Libreria',
+            isSelected: selectedSection == 'library',
+            onTap: () {
+              // Deseleziona qualsiasi corso quando si torna alla libreria
+              if (ref.read(selectedCourseProvider) != null) {
+                ref.read(selectedCourseProvider.notifier).state = null;
+              }
+              ref.read(selectedSectionProvider.notifier).state = 'library';
+            },
           ),
           _BottomNavItem(
-            icon: Icons.note_outlined,
-            label: 'Note',
-            color: AppColors.notes,
-            isSelected: selectedIndex == 1,
-            onTap: () => ref.read(selectedTabProvider.notifier).state = 1,
+            icon: Icons.calendar_today_outlined,
+            label: 'Planner',
+            isSelected: selectedSection == 'planner',
+            onTap: () => ref.read(selectedSectionProvider.notifier).state = 'planner',
           ),
           _BottomNavItem(
-            icon: Icons.bubble_chart_outlined,
-            label: 'Mappe',
-            color: AppColors.mindMaps,
-            isSelected: selectedIndex == 2,
-            onTap: () => ref.read(selectedTabProvider.notifier).state = 2,
-          ),
-          _BottomNavItem(
-            icon: Icons.quiz_outlined,
-            label: 'Domande',
-            color: AppColors.questions,
-            isSelected: selectedIndex == 3,
-            onTap: () => ref.read(selectedTabProvider.notifier).state = 3,
-          ),
-          _BottomNavItem(
-            icon: Icons.key_outlined,
-            label: 'Parole',
-            color: AppColors.keywords,
-            isSelected: selectedIndex == 4,
-            onTap: () => ref.read(selectedTabProvider.notifier).state = 4,
+            icon: Icons.map_outlined,
+            label: 'Mappa',
+            isSelected: selectedSection == 'map',
+            onTap: () => ref.read(selectedSectionProvider.notifier).state = 'map',
           ),
         ],
       ),
     );
   }
-
-  // Mostra dialog per la creazione di nuovo contenuto
-  void _showCreateContentDialog(BuildContext context, int selectedTabIndex) {
-    final contentTypes = [
-      'Flashcards',
-      'Note',
-      'Mappe mentali',
-      'Domande',
-      'Parole chiave',
-    ];
+  
+  // Floating Action Button personalizzato per ogni sezione
+  Widget? _buildFloatingActionButton(BuildContext context, String selectedSection, String? selectedCourseId) {
+    // Colore e azione in base alla sezione attuale
+    IconData icon;
+    String tooltip;
+    VoidCallback onPressed;
+    Color backgroundColor;
     
-    final contentType = contentTypes[selectedTabIndex];
-    final contentColor = [
-      AppColors.flashcards,
-      AppColors.notes, 
-      AppColors.mindMaps,
-      AppColors.questions,
-      AppColors.keywords,
-    ][selectedTabIndex];
+    switch (selectedSection) {
+      case 'library':
+        // Se siamo nella vista dei corsi e non c'è un corso selezionato
+        if (selectedCourseId == null) {
+          icon = Icons.add;
+          tooltip = 'Aggiungi corso';
+          backgroundColor = AppColors.primaryBlue;
+          onPressed = () {
+            // Dialog per aggiungere un nuovo corso
+            _showAddCourseDialog(context);
+          };
+        } 
+        // Se siamo nei dettagli di un corso selezionato
+        else {
+          icon = Icons.add;
+          tooltip = 'Aggiungi elemento';
+          backgroundColor = AppColors.primaryBlue;
+          onPressed = () {
+            // Dialog per aggiungere un nuovo elemento al corso
+            _showAddItemDialog(context, selectedCourseId);
+          };
+        }
+        break;
+      case 'planner':
+        icon = Icons.add_task;
+        tooltip = 'Nuovo evento';
+        backgroundColor = AppColors.notes;
+        onPressed = () {
+          // Dialog per aggiungere un nuovo evento al planner
+          _showAddEventDialog(context);
+        };
+        break;
+      case 'map':
+        // Per la mappa potrebbe non essere necessario un FAB
+        return null;
+      default:
+        icon = Icons.add;
+        tooltip = 'Aggiungi';
+        backgroundColor = AppColors.primaryBlue;
+        onPressed = () {};
+    }
     
+    return FloatingActionButton(
+      onPressed: onPressed,
+      backgroundColor: backgroundColor,
+      tooltip: tooltip,
+      child: Icon(icon, color: Colors.white),
+    );
+  }
+  
+  // Dialog per aggiungere un nuovo corso
+  void _showAddCourseDialog(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -199,16 +251,42 @@ class AppShell extends ConsumerWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => _buildCreateContentSheet(context, contentType, contentColor),
+      builder: (context) => _buildAddCourseSheet(context),
     );
   }
-
-  // Costruisce il bottom sheet per la creazione di nuovo contenuto
-  Widget _buildCreateContentSheet(BuildContext context, String contentType, Color contentColor) {
+  
+  // Dialog per aggiungere un nuovo elemento a un corso
+  void _showAddItemDialog(BuildContext context, String courseId) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.backgroundGrey,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => _buildAddItemSheet(context, courseId),
+    );
+  }
+  
+  // Dialog per aggiungere un nuovo evento al planner
+  void _showAddEventDialog(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.backgroundGrey,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => _buildAddEventSheet(context),
+    );
+  }
+  
+  // Sheet per aggiungere un nuovo corso
+  Widget _buildAddCourseSheet(BuildContext context) {
     return DraggableScrollableSheet(
-      initialChildSize: 0.6,
-      maxChildSize: 0.9,
-      minChildSize: 0.5,
+      initialChildSize: 0.5,
+      maxChildSize: 0.8,
+      minChildSize: 0.4,
       expand: false,
       builder: (context, scrollController) {
         return Container(
@@ -220,9 +298,9 @@ class AppShell extends ConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Crea nuovo $contentType',
-                    style: const TextStyle(
+                  const Text(
+                    'Aggiungi nuovo corso',
+                    style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: AppColors.textLight,
@@ -237,51 +315,43 @@ class AppShell extends ConsumerWidget {
               
               const SizedBox(height: 24),
               
-              // Form placeholder
+              // Form
               Expanded(
                 child: SingleChildScrollView(
                   controller: scrollController,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      TextField(
-                        style: const TextStyle(color: AppColors.textLight),
+                      // Nome del corso
+                      const TextField(
+                        style: TextStyle(color: AppColors.textLight),
                         decoration: InputDecoration(
-                          labelText: 'Titolo',
-                          labelStyle: const TextStyle(color: AppColors.textMedium),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: AppColors.border),
-                          ),
+                          labelText: 'Nome del corso',
+                          labelStyle: TextStyle(color: AppColors.textMedium),
+                          border: OutlineInputBorder(),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: AppColors.border),
+                            borderSide: BorderSide(color: AppColors.border),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(color: contentColor, width: 2),
+                            borderSide: BorderSide(color: AppColors.primaryBlue, width: 2),
                           ),
                         ),
                       ),
                       
                       const SizedBox(height: 16),
                       
-                      TextField(
-                        style: const TextStyle(color: AppColors.textLight),
+                      // Descrizione
+                      const TextField(
+                        style: TextStyle(color: AppColors.textLight),
                         decoration: InputDecoration(
                           labelText: 'Descrizione',
-                          labelStyle: const TextStyle(color: AppColors.textMedium),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: AppColors.border),
-                          ),
+                          labelStyle: TextStyle(color: AppColors.textMedium),
+                          border: OutlineInputBorder(),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: AppColors.border),
+                            borderSide: BorderSide(color: AppColors.border),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(color: contentColor, width: 2),
+                            borderSide: BorderSide(color: AppColors.primaryBlue, width: 2),
                           ),
                         ),
                         maxLines: 3,
@@ -289,8 +359,31 @@ class AppShell extends ConsumerWidget {
                       
                       const SizedBox(height: 16),
                       
-                      // Campo specifico in base al tipo di contenuto
-                      _buildContentTypeSpecificField(contentType, contentColor),
+                      // Selezione colore
+                      const Text(
+                        'Colore',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textLight,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildColorSelector(),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Selezione icona
+                      const Text(
+                        'Icona',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textLight,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildIconSelector(),
                     ],
                   ),
                 ),
@@ -302,12 +395,11 @@ class AppShell extends ConsumerWidget {
                 height: 50,
                 child: ElevatedButton(
                   onPressed: () {
-                    // Implementazione del salvataggio
+                    // Logica per salvare il corso
                     Navigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: contentColor,
-                    foregroundColor: Colors.white,
+                    backgroundColor: AppColors.primaryBlue,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15),
                     ),
@@ -327,158 +419,439 @@ class AppShell extends ConsumerWidget {
       },
     );
   }
-
-  // Costruisce campi specifici per tipo di contenuto
-  Widget _buildContentTypeSpecificField(String contentType, Color contentColor) {
-    final TextStyle labelStyle = TextStyle(
-      fontSize: 16,
-      fontWeight: FontWeight.w500,
-      color: contentColor,
-    );
-    
-    final InputDecoration inputDecoration = InputDecoration(
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: AppColors.border),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: AppColors.border),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: contentColor, width: 2),
-      ),
-      hintStyle: const TextStyle(color: AppColors.textMedium),
-    );
-    
-    switch (contentType) {
-      case 'Flashcards':
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Frontalino', style: labelStyle),
-            const SizedBox(height: 8),
-            TextField(
-              style: const TextStyle(color: AppColors.textLight),
-              decoration: inputDecoration.copyWith(
-                hintText: 'Inserisci il testo del frontalino',
+  
+  // Sheet per aggiungere un nuovo elemento (flashcard, nota, ecc.) a un corso
+  Widget _buildAddItemSheet(BuildContext context, String courseId) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.6,
+      maxChildSize: 0.9,
+      minChildSize: 0.4,
+      expand: false,
+      builder: (context, scrollController) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Aggiungi nuovo elemento',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textLight,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: AppColors.textMedium),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
               ),
-              maxLines: 2,
-            ),
-            
-            const SizedBox(height: 16),
-            
-            Text('Retro', style: labelStyle),
-            const SizedBox(height: 8),
-            TextField(
-              style: const TextStyle(color: AppColors.textLight),
-              decoration: inputDecoration.copyWith(
-                hintText: 'Inserisci il testo del retro',
+              
+              const SizedBox(height: 24),
+              
+              // Selezione del tipo di elemento
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  _buildTypeSelector('Flashcard', Icons.view_carousel_outlined, AppColors.flashcards),
+                  _buildTypeSelector('Nota', Icons.note_outlined, AppColors.notes),
+                  _buildTypeSelector('Mappa mentale', Icons.bubble_chart_outlined, AppColors.mindMaps),
+                  _buildTypeSelector('Domanda', Icons.quiz_outlined, AppColors.questions),
+                  _buildTypeSelector('Parola chiave', Icons.key_outlined, AppColors.keywords),
+                ],
               ),
-              maxLines: 2,
-            ),
-          ],
-        );
-        
-      case 'Note':
-        return TextField(
-          style: const TextStyle(color: AppColors.textLight),
-          decoration: inputDecoration.copyWith(
-            labelText: 'Contenuto',
-            hintText: 'Scrivi il contenuto della nota qui...',
+              
+              const SizedBox(height: 24),
+              
+              // Form per flashcard (default)
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Titolo
+                      const TextField(
+                        style: TextStyle(color: AppColors.textLight),
+                        decoration: InputDecoration(
+                          labelText: 'Titolo',
+                          labelStyle: TextStyle(color: AppColors.textMedium),
+                          border: OutlineInputBorder(),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.border),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.flashcards, width: 2),
+                          ),
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Fronte
+                      const Text(
+                        'Fronte',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textLight,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const TextField(
+                        style: TextStyle(color: AppColors.textLight),
+                        decoration: InputDecoration(
+                          hintText: 'Testo fronte della flashcard',
+                          hintStyle: TextStyle(color: AppColors.textMedium),
+                          border: OutlineInputBorder(),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.border),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.flashcards, width: 2),
+                          ),
+                        ),
+                        maxLines: 3,
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Retro
+                      const Text(
+                        'Retro',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textLight,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const TextField(
+                        style: TextStyle(color: AppColors.textLight),
+                        decoration: InputDecoration(
+                          hintText: 'Testo retro della flashcard',
+                          hintStyle: TextStyle(color: AppColors.textMedium),
+                          border: OutlineInputBorder(),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.border),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.flashcards, width: 2),
+                          ),
+                        ),
+                        maxLines: 3,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              
+              // Pulsante di salvataggio
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () {
+                    // Logica per salvare l'elemento
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.flashcards,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                  ),
+                  child: const Text(
+                    'Salva',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-          maxLines: 10,
         );
-        
-      case 'Mappe mentali':
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Concetto centrale', style: labelStyle),
-            const SizedBox(height: 8),
-            TextField(
-              style: const TextStyle(color: AppColors.textLight),
-              decoration: inputDecoration.copyWith(
-                hintText: 'Inserisci il concetto centrale',
+      },
+    );
+  }
+  
+  // Widget per selezionare il tipo di elemento da aggiungere
+  Widget _buildTypeSelector(String label, IconData icon, Color color) {
+    return ChoiceChip(
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 4),
+          Text(label),
+        ],
+      ),
+      selected: label == 'Flashcard', // Default selezionato
+      selectedColor: color.withOpacity(0.2),
+      backgroundColor: AppColors.backgroundGrey,
+      labelStyle: TextStyle(
+        color: label == 'Flashcard' ? color : AppColors.textMedium,
+      ),
+      onSelected: (selected) {
+        // Cambia il tipo di elemento da aggiungere
+      },
+    );
+  }
+  
+  // Sheet per aggiungere un nuovo evento al planner
+  Widget _buildAddEventSheet(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.5,
+      maxChildSize: 0.8,
+      minChildSize: 0.4,
+      expand: false,
+      builder: (context, scrollController) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Aggiungi nuovo evento',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textLight,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: AppColors.textMedium),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
               ),
-            ),
-            
-            const SizedBox(height: 16),
-            
-            Text('Concetti correlati', style: labelStyle),
-            const SizedBox(height: 8),
-            TextField(
-              style: const TextStyle(color: AppColors.textLight),
-              decoration: inputDecoration.copyWith(
-                hintText: 'Separa i concetti con virgole',
+              
+              const SizedBox(height: 24),
+              
+              // Form
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Titolo dell'evento
+                      const TextField(
+                        style: TextStyle(color: AppColors.textLight),
+                        decoration: InputDecoration(
+                          labelText: 'Titolo',
+                          labelStyle: TextStyle(color: AppColors.textMedium),
+                          border: OutlineInputBorder(),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.border),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.notes, width: 2),
+                          ),
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Data e ora
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildDateField('Data'),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildTimeField('Ora'),
+                          ),
+                        ],
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Descrizione
+                      const TextField(
+                        style: TextStyle(color: AppColors.textLight),
+                        decoration: InputDecoration(
+                          labelText: 'Descrizione',
+                          labelStyle: TextStyle(color: AppColors.textMedium),
+                          border: OutlineInputBorder(),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.border),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.notes, width: 2),
+                          ),
+                        ),
+                        maxLines: 3,
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              maxLines: 3,
-            ),
-          ],
+              
+              // Pulsante di salvataggio
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () {
+                    // Logica per salvare l'evento
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.notes,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                  ),
+                  child: const Text(
+                    'Salva',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         );
-        
-      case 'Domande':
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Domanda', style: labelStyle),
-            const SizedBox(height: 8),
-            TextField(
-              style: const TextStyle(color: AppColors.textLight),
-              decoration: inputDecoration.copyWith(
-                hintText: 'Inserisci la domanda',
+      },
+    );
+  }
+  
+  // Widget per selezionare il colore del corso
+  Widget _buildColorSelector() {
+    final colors = [
+      Colors.blue,
+      Colors.green,
+      Colors.orange,
+      Colors.purple,
+      Colors.red,
+      Colors.teal,
+      Colors.amber,
+      Colors.indigo,
+    ];
+    
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      children: colors.map((color) {
+        return InkWell(
+          onTap: () {
+            // Seleziona questo colore
+          },
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white,
+                width: 2,
               ),
-              maxLines: 2,
             ),
-            
-            const SizedBox(height: 16),
-            
-            Text(
-              'Opzioni (una per riga, segna con * quella corretta)',
-              style: labelStyle,
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              style: const TextStyle(color: AppColors.textLight),
-              decoration: inputDecoration.copyWith(
-                hintText: 'Esempio:\nParis\n*Londra\nBerlino\nMadrid',
-              ),
-              maxLines: 6,
-            ),
-          ],
+          ),
         );
-        
-      case 'Parole chiave':
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Parola chiave', style: labelStyle),
-            const SizedBox(height: 8),
-            TextField(
-              style: const TextStyle(color: AppColors.textLight),
-              decoration: inputDecoration.copyWith(
-                hintText: 'Inserisci la parola chiave',
-              ),
+      }).toList(),
+    );
+  }
+  
+  // Widget per selezionare l'icona del corso
+  Widget _buildIconSelector() {
+    final icons = [
+      Icons.calculate,
+      Icons.science,
+      Icons.history_edu,
+      Icons.computer,
+      Icons.psychology,
+      Icons.language,
+      Icons.palette,
+      Icons.sports_soccer,
+    ];
+    
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      children: icons.map((icon) {
+        return InkWell(
+          onTap: () {
+            // Seleziona questa icona
+          },
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppColors.backgroundGrey,
+              shape: BoxShape.circle,
             ),
-            
-            const SizedBox(height: 16),
-            
-            Text('Definizione', style: labelStyle),
-            const SizedBox(height: 8),
-            TextField(
-              style: const TextStyle(color: AppColors.textLight),
-              decoration: inputDecoration.copyWith(
-                hintText: 'Inserisci la definizione',
-              ),
-              maxLines: 4,
+            child: Icon(
+              icon,
+              color: AppColors.textLight,
             ),
-          ],
+          ),
         );
-        
-      default:
-        return const SizedBox.shrink();
-    }
+      }).toList(),
+    );
+  }
+  
+  // Campo per selezionare una data
+  Widget _buildDateField(String label) {
+    return TextField(
+      style: const TextStyle(color: AppColors.textLight),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: AppColors.textMedium),
+        border: const OutlineInputBorder(),
+        enabledBorder: const OutlineInputBorder(
+          borderSide: BorderSide(color: AppColors.border),
+        ),
+        focusedBorder: const OutlineInputBorder(
+          borderSide: BorderSide(color: AppColors.notes, width: 2),
+        ),
+        suffixIcon: const Icon(Icons.calendar_today, color: AppColors.textMedium),
+      ),
+      readOnly: true,
+      onTap: () {
+        // Mostra selettore di data
+      },
+    );
+  }
+  
+  // Campo per selezionare un'ora
+  Widget _buildTimeField(String label) {
+    return TextField(
+      style: const TextStyle(color: AppColors.textLight),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: AppColors.textMedium),
+        border: const OutlineInputBorder(),
+        enabledBorder: const OutlineInputBorder(
+          borderSide: BorderSide(color: AppColors.border),
+        ),
+        focusedBorder: const OutlineInputBorder(
+          borderSide: BorderSide(color: AppColors.notes, width: 2),
+        ),
+        suffixIcon: const Icon(Icons.access_time, color: AppColors.textMedium),
+      ),
+      readOnly: true,
+      onTap: () {
+        // Mostra selettore di ora
+      },
+    );
   }
 }
 
@@ -486,20 +859,21 @@ class AppShell extends ConsumerWidget {
 class _BottomNavItem extends StatelessWidget {
   final IconData icon;
   final String label;
-  final Color color;
   final bool isSelected;
   final VoidCallback onTap;
   
   const _BottomNavItem({
     required this.icon,
     required this.label,
-    required this.color,
     required this.isSelected,
     required this.onTap,
   });
   
   @override
   Widget build(BuildContext context) {
+    // Colore basato sulla sezione
+    final Color color = isSelected ? _getColorForLabel(label) : AppColors.textMedium;
+    
     return InkWell(
       onTap: onTap,
       child: Column(
@@ -507,7 +881,7 @@ class _BottomNavItem extends StatelessWidget {
         children: [
           Icon(
             icon,
-            color: isSelected ? color : AppColors.textMedium,
+            color: color,
             size: 24,
           ),
           const SizedBox(height: 4),
@@ -515,12 +889,26 @@ class _BottomNavItem extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: 12,
-              color: isSelected ? color : AppColors.textMedium,
+              color: color,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
             ),
           ),
         ],
       ),
     );
+  }
+  
+  // Ottiene il colore appropriato per ciascuna sezione
+  Color _getColorForLabel(String label) {
+    switch (label) {
+      case 'Libreria':
+        return AppColors.primaryBlue;
+      case 'Planner':
+        return AppColors.notes;
+      case 'Mappa':
+        return AppColors.mindMaps;
+      default:
+        return AppColors.primaryBlue;
+    }
   }
 }
