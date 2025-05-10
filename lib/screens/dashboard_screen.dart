@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/providers/course_providers.dart';
-import 'dashboard_screens/book_screen.dart'; // Importa la schermata dei capitoli
+import 'dashboard_screens/book_screen.dart'; // Importa la schermata dei materiali
+import 'dashboard_screens/chapter_screen.dart'; // Importa la schermata dei capitoli
+// import '../data/pdf_materials_data.dart'; // Importa il file dei dati mockati
 
 // Define the providers
 final completionPercentageProvider =
@@ -39,6 +41,10 @@ class DashboardScreen extends ConsumerWidget {
         );
     final selectedCourseIcon = selectedCourseInfo.icon;
 
+    // Ottieni una citazione motivazionale (potrebbe venire da un provider)
+    const quote = "L'esperto in qualsiasi cosa è stato una volta un principiante.";
+    const author = "Helen Hayes";
+
     return Scaffold(
       backgroundColor: AppColors.darkBackground,
       body: SingleChildScrollView(
@@ -60,17 +66,17 @@ class DashboardScreen extends ConsumerWidget {
 
             const SizedBox(height: 24),
 
-            // Main statistics grid
+            // Main statistics grid - reso più compatto
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               crossAxisCount: 2,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
-              childAspectRatio: 1.4, // Slightly bigger boxes
+              childAspectRatio: 2.0, // Reso più piccolo (prima era 1.4)
               children: [
-                // Completion Percentage Card - ora con navigazione alla pagina capitoli
-                _buildStatCardWithNavigation(
+                // Completion Percentage Card con navigazione alla pagina dei materiali
+                _buildCompactStatCard(
                   context,
                   title: 'Materiale Completato',
                   value: '${(completionPercentage * 100).toStringAsFixed(0)}%',
@@ -78,47 +84,73 @@ class DashboardScreen extends ConsumerWidget {
                   color: Colors.blueAccent,
                   progress: completionPercentage,
                   description: 'del corso attuale',
-                  courseId: selectedCourseInfo.id, // Passa l'ID del corso
+                  onTap: () {
+                    // Naviga alla pagina dei materiali (book_screen)
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => ChapterProgressScreen(courseId: selectedCourseInfo.id),
+                      ),
+                    );
+                  },
                 ),
 
                 // Study Streak Card
-                _buildStatCardWithImage(
+                _buildCompactStatCard(
                   context,
                   title: 'Serie di Studio',
                   value: '$studyStreak giorni',
                   imagePath: 'assets/images/brain.png',
-                  color: Colors.redAccent, // More vibrant red
-                  progress:
-                      studyStreak / 7, // Assuming 7 is max for visualization
+                  color: Colors.redAccent,
+                  progress: studyStreak / 7,
                   description: 'giorni consecutivi',
-                  isStreak: true,
+                  onTap: () {
+                    // Nessuna navigazione specifica
+                  },
                 ),
 
-                // Chapter Progress Card (senza navigazione)
-                _buildChapterProgressCard(
+                // Chapter Progress Card con navigazione a StudyWorkspaceScreen
+                _buildCompactStatCard(
                   context,
-                  ref,
+                  title: 'Progresso Capitolo',
+                  value: '${(chapterProgress * 100).toStringAsFixed(0)}%',
+                  icon: Icons.book,
+                  color: Colors.greenAccent,
                   progress: chapterProgress,
+                  description: 'completato',
+                  onTap: () {
+                    // Naviga direttamente a StudyWorkspaceScreen quando si clicca sulla card
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => StudyWorkspaceScreen(
+                          courseId: selectedCourseInfo.id,
+                          chapterId: 'current_chapter', // Qui puoi passare l'ID del capitolo corrente
+                        ),
+                      ),
+                    );
+                  },
                 ),
 
                 // Daily Activity Card
                 _buildCombinedProgressAndActivities(
-                    context, dailyActivity, todayPlannedActivities),
+                  context, 
+                  dailyActivity, 
+                  todayPlannedActivities
+                ),
               ],
             ),
 
             const SizedBox(height: 24),
 
             // Motivational Quote
-            _buildMotivationalQuote(),
+            _buildMotivationalQuote(quote, author),
           ],
         ),
       ),
     );
   }
 
-  // Nuovo metodo per la card con navigazione alla pagina capitoli
-  Widget _buildStatCardWithNavigation(
+  // Card compatta senza bottone
+  Widget _buildCompactStatCard(
     BuildContext context, {
     required String title,
     required String value,
@@ -127,18 +159,10 @@ class DashboardScreen extends ConsumerWidget {
     required Color color,
     required double progress,
     required String description,
-    required String courseId, // Aggiungi courseId come parametro
-    bool isStreak = false,
+    required VoidCallback onTap,
   }) {
     return GestureDetector(
-      onTap: () {
-        // Naviga alla pagina dei capitoli quando si clicca sul quadrato
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => ChapterProgressScreen(courseId: courseId),
-          ),
-        );
-      },
+      onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -167,14 +191,14 @@ class DashboardScreen extends ConsumerWidget {
                 color: Colors.white,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             LinearProgressIndicator(
               value: progress,
               backgroundColor: AppColors.backgroundGrey,
               color: color,
-              minHeight: 8,
+              minHeight: 6,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               value,
               style: const TextStyle(
@@ -182,7 +206,6 @@ class DashboardScreen extends ConsumerWidget {
                 color: Colors.white,
               ),
             ),
-            const SizedBox(height: 12),
             Expanded(
               child: Center(
                 child: imagePath != null
@@ -192,12 +215,11 @@ class DashboardScreen extends ConsumerWidget {
                       )
                     : Icon(
                         icon,
-                        color: color,
-                        size: 48,
+                        color: icon == Icons.book ? Colors.white : color,
+                        size: 40,
                       ),
               ),
             ),
-            const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -223,172 +245,11 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatCardWithImage(
-    BuildContext context, {
-    required String title,
-    required String value,
-    IconData? icon,
-    String? imagePath,
-    required Color color,
-    required double progress,
-    required String description,
-    bool isStreak = false,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [color.withOpacity(0.2), color.withOpacity(0.6)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 12),
-          LinearProgressIndicator(
-            value: progress,
-            backgroundColor: AppColors.backgroundGrey,
-            color: color,
-            minHeight: 8,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Expanded(
-            child: Center(
-              child: imagePath != null
-                  ? Image.asset(
-                      imagePath,
-                      fit: BoxFit.contain,
-                    )
-                  : Icon(
-                      icon,
-                      color: color,
-                      size: 48,
-                    ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            description,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.white70,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildChapterProgressCard(
+  Widget _buildCombinedProgressAndActivities(
     BuildContext context,
-    WidgetRef ref, {
-    required double progress,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.greenAccent.withOpacity(0.2), Colors.greenAccent],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.greenAccent.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Progresso Capitolo',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 12),
-          LinearProgressIndicator(
-            value: progress,
-            backgroundColor: Colors.white24,
-            color: Colors.white,
-            minHeight: 8,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '${(progress * 100).toStringAsFixed(0)}% completato',
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Expanded(
-            child: Center(
-              child: Icon(
-                Icons.book,
-                color: Colors.white,
-                size: 48,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Center(
-            child: ElevatedButton(
-              onPressed: () {
-                // Azione per continuare lo studio
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.greenAccent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                'Continua a Studiare',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCombinedProgressAndActivities(BuildContext context,
-      double dailyActivity, List<Map<String, String>> activities) {
+    double dailyActivity, 
+    List<Map<String, String>> activities
+  ) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -405,19 +266,19 @@ class DashboardScreen extends ConsumerWidget {
           ),
         ],
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12), // Ridotto padding
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Progresso di Oggi & Attività Pianificate',
+            'Progresso di Oggi',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8), // Ridotto spazio
 
           // Progress Section
           Row(
@@ -431,7 +292,7 @@ class DashboardScreen extends ConsumerWidget {
                       'Obiettivo Giornaliero',
                       style: TextStyle(
                         color: Colors.white70,
-                        fontSize: 14,
+                        fontSize: 12, // Ridotto font
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -439,21 +300,21 @@ class DashboardScreen extends ConsumerWidget {
                       '${(dailyActivity * 100).toStringAsFixed(0)}% completato',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 16,
+                        fontSize: 14, // Ridotto font
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8), // Ridotto spazio
                     LinearProgressIndicator(
                       value: dailyActivity,
                       backgroundColor: Colors.white24,
                       color: Colors.white,
-                      minHeight: 8,
+                      minHeight: 6, // Ridotto altezza
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12), // Ridotto spazio
               Expanded(
                 flex: 2,
                 child: Column(
@@ -463,7 +324,7 @@ class DashboardScreen extends ConsumerWidget {
                       'Tempo Studiato',
                       style: TextStyle(
                         color: Colors.white70,
-                        fontSize: 14,
+                        fontSize: 12, // Ridotto font
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -471,7 +332,7 @@ class DashboardScreen extends ConsumerWidget {
                       '${(dailyActivity * 2).toStringAsFixed(1)}/2 ore',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 16,
+                        fontSize: 14, // Ridotto font
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -481,67 +342,59 @@ class DashboardScreen extends ConsumerWidget {
             ],
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 12), // Ridotto spazio
 
-          // Planned Activities Section
-          const Text(
-            'Matematica',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 12),
-          ...activities.map((activity) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Row(
-                children: [
-                  Container(
-                    width: 8,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
+          // Mostro solo un'attività per risparmiare spazio
+          if (activities.isNotEmpty)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Prossima attività',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          activity['description']!,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 12,
-                          ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Container(
+                      width: 4, // Più sottile
+                      height: 20, // Più corto
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        activities.first['description']!,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                  Text(
-                    activity['time']!,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
+                    Text(
+                      activities.first['time']!,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
+                  ],
+                ),
+              ],
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildMotivationalQuote() {
-    const quote =
-        "L'esperto in qualsiasi cosa è stato una volta un principiante.";
-    const author = "Helen Hayes";
-
+  Widget _buildMotivationalQuote(String quote, String author) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
