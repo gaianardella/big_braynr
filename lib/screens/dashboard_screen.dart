@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/providers/course_providers.dart';
+import 'dashboard_screens/book_screen.dart'; // Importa la schermata dei capitoli
 
 // Define the providers
 final completionPercentageProvider =
@@ -30,13 +31,13 @@ class DashboardScreen extends ConsumerWidget {
     final selectedCourse = ref.watch(selectedCourseProvider);
     final courses = ref.watch(coursesProvider);
 
-    // Get the selected course's icon
-    final selectedCourseIcon = courses
+    // Get the selected course's icon and id
+    final selectedCourseInfo = courses
         .firstWhere(
           (course) => course.id == selectedCourse,
           orElse: () => courses.first,
-        )
-        .icon;
+        );
+    final selectedCourseIcon = selectedCourseInfo.icon;
 
     return Scaffold(
       backgroundColor: AppColors.darkBackground,
@@ -68,8 +69,8 @@ class DashboardScreen extends ConsumerWidget {
               mainAxisSpacing: 12,
               childAspectRatio: 1.4, // Slightly bigger boxes
               children: [
-                // Completion Percentage Card
-                _buildStatCardWithImage(
+                // Completion Percentage Card - ora con navigazione alla pagina capitoli
+                _buildStatCardWithNavigation(
                   context,
                   title: 'Materiale Completato',
                   value: '${(completionPercentage * 100).toStringAsFixed(0)}%',
@@ -77,6 +78,7 @@ class DashboardScreen extends ConsumerWidget {
                   color: Colors.blueAccent,
                   progress: completionPercentage,
                   description: 'del corso attuale',
+                  courseId: selectedCourseInfo.id, // Passa l'ID del corso
                 ),
 
                 // Study Streak Card
@@ -92,7 +94,7 @@ class DashboardScreen extends ConsumerWidget {
                   isStreak: true,
                 ),
 
-                // Chapter Progress Card
+                // Chapter Progress Card (senza navigazione)
                 _buildChapterProgressCard(
                   context,
                   ref,
@@ -109,6 +111,112 @@ class DashboardScreen extends ConsumerWidget {
 
             // Motivational Quote
             _buildMotivationalQuote(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Nuovo metodo per la card con navigazione alla pagina capitoli
+  Widget _buildStatCardWithNavigation(
+    BuildContext context, {
+    required String title,
+    required String value,
+    IconData? icon,
+    String? imagePath,
+    required Color color,
+    required double progress,
+    required String description,
+    required String courseId, // Aggiungi courseId come parametro
+    bool isStreak = false,
+  }) {
+    return GestureDetector(
+      onTap: () {
+        // Naviga alla pagina dei capitoli quando si clicca sul quadrato
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => ChapterProgressScreen(courseId: courseId),
+          ),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [color.withOpacity(0.2), color.withOpacity(0.6)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 12),
+            LinearProgressIndicator(
+              value: progress,
+              backgroundColor: AppColors.backgroundGrey,
+              color: color,
+              minHeight: 8,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: Center(
+                child: imagePath != null
+                    ? Image.asset(
+                        imagePath,
+                        fit: BoxFit.contain,
+                      )
+                    : Icon(
+                        icon,
+                        color: color,
+                        size: 48,
+                      ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    description,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward,
+                  color: Colors.white70,
+                  size: 16,
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -259,7 +367,7 @@ class DashboardScreen extends ConsumerWidget {
           Center(
             child: ElevatedButton(
               onPressed: () {
-                // Add your navigation or action here
+                // Azione per continuare lo studio
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
