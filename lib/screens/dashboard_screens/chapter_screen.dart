@@ -8,6 +8,8 @@ import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../core/theme/app_colors.dart';
+import 'models/ai_service.dart';
+
 
 // Provider per le domande generate
 final generatedQuestionsProvider =
@@ -54,6 +56,7 @@ class ChapterScreen extends ConsumerStatefulWidget {
 }
 
 class _ChapterScreenState extends ConsumerState<ChapterScreen> {
+  final _aiService = AIService();
   final GlobalKey<SfPdfViewerState> _pdfViewerKey = GlobalKey();
   final PdfViewerController _pdfViewerController = PdfViewerController();
   String _selectedText = '';
@@ -144,54 +147,60 @@ class _ChapterScreenState extends ConsumerState<ChapterScreen> {
   }
 
   Future<void> _generateQuestions() async {
-    if (_selectedText.isEmpty) return;
+  if (_selectedText.isEmpty) return;
 
-    setState(() {
-      _isGeneratingQuestions = true;
-      if (!_isDrawerOpen) {
-        _isDrawerOpen = true;
-      }
-    });
-
-    try {
-      // Simulazione chiamata API a Claude
-      await Future.delayed(Duration(seconds: 2)); // Simula ritardo API
-      
-      // Simulate API response
-      final List<Question> generatedQuestions = [
-        Question(
-          question: 'Quale concetto principale viene discusso in questo testo?',
-          answer: 'Il concetto principale è legato al contenuto selezionato.',
-        ),
-        Question(
-          question: 'Come si collega questo passaggio al resto del documento?',
-          answer: 'Questo passaggio fornisce informazioni supplementari sul tema principale.',
-        ),
-        Question(
-          question: 'Quali sono le implicazioni di quanto descritto in questo paragrafo?',
-          answer: 'Le implicazioni includono una nuova prospettiva sull\'argomento trattato.',
-        ),
-      ];
-
-      // Aggiungi le domande generate al provider
-      ref.read(generatedQuestionsProvider.notifier).addQuestions(generatedQuestions);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Errore durante la generazione delle domande: $e'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      );
-    } finally {
-      setState(() {
-        _isGeneratingQuestions = false;
-      });
+  setState(() {
+    _isGeneratingQuestions = true;
+    if (!_isDrawerOpen) {
+      _isDrawerOpen = true;
     }
+  });
+
+  try {
+    // Usa il servizio AI per generare le domande
+    final questionsData = await _aiService.generateQuestions(_selectedText);
+    
+    // Converti i dati in oggetti Question definiti in questo file
+    final List<Question> generatedQuestions = questionsData.map((data) => 
+      Question(
+        question: data['question']!,
+        answer: data['answer']!,
+      )
+    ).toList();
+    
+    // Aggiungi le domande generate al provider
+    ref.read(generatedQuestionsProvider.notifier).addQuestions(generatedQuestions);
+    
+    // Mostra una notifica di successo
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Domande generate con successo!'),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  } catch (e) {
+    debugPrint('Errore durante la generazione delle domande: $e');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Errore: ${e.toString().replaceAll('Exception: ', '')}'),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+  } finally {
+    setState(() {
+      _isGeneratingQuestions = false;
+    });
   }
+}
 
   @override
   Widget build(BuildContext context) {

@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // 👈 aggiunto dotenv
 import 'app_shell.dart';
 import 'core/theme/app_colors.dart';
 
-void main() {
-  // Assicura che il binding Flutter sia inizializzato
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
+  // Carica il file .env
+  await dotenv.load();
+
   // Imposta la barra di stato per tema scuro
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -16,8 +19,7 @@ void main() {
       statusBarBrightness: Brightness.dark,
     ),
   );
-  
-  // Avvia l'applicazione
+
   runApp(
     const ProviderScope(
       child: StudyApp(),
@@ -32,24 +34,21 @@ class StudyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'BraynR Studio',
-      debugShowCheckedModeBanner: false, // Rimuove il banner di debug
+      debugShowCheckedModeBanner: false,
       theme: _buildAppTheme(),
       darkTheme: _buildAppTheme(isDark: true),
-      themeMode: ThemeMode.dark, // Forza il tema scuro come in Braynr
+      themeMode: ThemeMode.dark,
       home: const AppShell(),
     );
   }
-  
-  // Costruisce il tema dell'applicazione
+
   ThemeData _buildAppTheme({bool isDark = true}) {
     final isDarkTheme = isDark;
-    
+
     return ThemeData(
-      // Colori principali
       primaryColor: AppColors.primaryBlue,
       scaffoldBackgroundColor: isDarkTheme ? AppColors.darkBackground : Colors.white,
       canvasColor: isDarkTheme ? AppColors.darkBackground : Colors.white,
-      
       colorScheme: ColorScheme.fromSeed(
         brightness: isDarkTheme ? Brightness.dark : Brightness.light,
         seedColor: AppColors.primaryBlue,
@@ -58,8 +57,6 @@ class StudyApp extends StatelessWidget {
         background: isDarkTheme ? AppColors.darkBackground : Colors.white,
         surface: isDarkTheme ? AppColors.cardDark : Colors.white,
       ),
-      
-      // Impostazioni di input per campi di testo
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: isDarkTheme ? AppColors.cardDark : Colors.white,
@@ -87,8 +84,6 @@ class StudyApp extends StatelessWidget {
           color: isDarkTheme ? AppColors.textMedium : Colors.grey.shade700,
         ),
       ),
-      
-      // Impostazioni per Text Field
       textTheme: TextTheme(
         headlineLarge: TextStyle(
           color: isDarkTheme ? AppColors.textLight : AppColors.textDark,
@@ -133,8 +128,6 @@ class StudyApp extends StatelessWidget {
           fontSize: 12,
         ),
       ),
-      
-      // Bottoni 
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primaryBlue,
@@ -150,8 +143,6 @@ class StudyApp extends StatelessWidget {
           ),
         ),
       ),
-      
-      // Bottoni outlined
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.primaryBlue,
@@ -166,8 +157,6 @@ class StudyApp extends StatelessWidget {
           ),
         ),
       ),
-      
-      // Card
       cardTheme: CardTheme(
         color: isDarkTheme ? AppColors.cardDark : Colors.white,
         elevation: 0,
@@ -181,15 +170,11 @@ class StudyApp extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         shadowColor: AppColors.shadow,
       ),
-      
-      // Divider
       dividerTheme: DividerThemeData(
         color: isDarkTheme ? AppColors.divider : Colors.grey.shade200,
         thickness: 1,
         space: 1,
       ),
-      
-      // AppBar
       appBarTheme: AppBarTheme(
         backgroundColor: isDarkTheme ? AppColors.cardDark : Colors.white,
         elevation: 0,
@@ -203,8 +188,6 @@ class StudyApp extends StatelessWidget {
           fontWeight: FontWeight.w600,
         ),
       ),
-      
-      // Tooltip
       tooltipTheme: TooltipThemeData(
         decoration: BoxDecoration(
           color: isDarkTheme ? AppColors.cardDark.withOpacity(0.9) : Colors.grey.shade900.withOpacity(0.9),
@@ -215,8 +198,6 @@ class StudyApp extends StatelessWidget {
           fontSize: 12,
         ),
       ),
-      
-      // Dialog
       dialogTheme: DialogTheme(
         backgroundColor: isDarkTheme ? AppColors.backgroundGrey : Colors.white,
         elevation: 8,
@@ -224,8 +205,6 @@ class StudyApp extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
         ),
       ),
-      
-      // Popup Menu
       popupMenuTheme: PopupMenuThemeData(
         color: isDarkTheme ? AppColors.backgroundGrey : Colors.white,
         elevation: 8,
@@ -237,8 +216,6 @@ class StudyApp extends StatelessWidget {
           fontSize: 14,
         ),
       ),
-      
-      // Bottom Navigation Bar
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: isDarkTheme ? AppColors.cardDark : Colors.white,
         selectedItemColor: AppColors.primaryBlue,
@@ -246,8 +223,6 @@ class StudyApp extends StatelessWidget {
         type: BottomNavigationBarType.fixed,
         elevation: 8,
       ),
-      
-      // Floating Action Button
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: AppColors.primaryBlue,
         foregroundColor: Colors.white,
@@ -256,8 +231,6 @@ class StudyApp extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
         ),
       ),
-      
-      // Abilita Material 3
       useMaterial3: true,
     );
   }
