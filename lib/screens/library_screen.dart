@@ -208,17 +208,6 @@ class LibraryScreen extends ConsumerWidget {
             ),
           ),
           const Spacer(),
-          // Pulsante per accedere alle risorse complete
-          TextButton.icon(
-            onPressed: () {
-              // Azione per vedere tutte le risorse
-            },
-            icon: Icon(Icons.folder_open, color: course.color),
-            label: Text(
-              'Risorse',
-              style: TextStyle(color: course.color),
-            ),
-          ),
         ],
       ),
     );
