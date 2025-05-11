@@ -73,7 +73,9 @@ class _AddMaterialScreenState extends State<AddMaterialScreen> {
       final status = await Permission.storage.request();
       if (!status.isGranted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Storage permission is required')),
+          const SnackBar(
+              content:
+                  Text('È necessaria l\'autorizzazione per l\'archiviazione')),
         );
         return;
       }
@@ -82,7 +84,7 @@ class _AddMaterialScreenState extends State<AddMaterialScreen> {
         type: _fileType,
         allowedExtensions: _fileType == FileType.custom ? ['pdf'] : null,
         allowMultiple: false,
-        dialogTitle: 'Select a file',
+        dialogTitle: 'Seleziona un file',
       );
 
       if (result != null && result.files.isNotEmpty) {
@@ -93,7 +95,8 @@ class _AddMaterialScreenState extends State<AddMaterialScreen> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error selecting file: ${e.toString()}')),
+        SnackBar(
+            content: Text('Errore nella selezione del file: ${e.toString()}')),
       );
     }
   }
@@ -113,7 +116,7 @@ class _AddMaterialScreenState extends State<AddMaterialScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a file first')),
+        const SnackBar(content: Text('Per favore seleziona un file prima')),
       );
       return;
     }
@@ -133,23 +136,24 @@ class _AddMaterialScreenState extends State<AddMaterialScreen> {
       }
 
       await _showNotification(
-        'Upload Complete',
-        '${_selectedFile!.name} has been added successfully',
+        'Caricamento completato',
+        '${_selectedFile!.name} è stato aggiunto con successo',
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Material added successfully!')),
+        const SnackBar(content: Text('Materiale aggiunto!')),
       );
 
       if (mounted) Navigator.pop(context);
     } catch (e) {
       await _showNotification(
-        'Upload Failed',
-        'Failed to upload ${_selectedFile!.name}',
+        'Caricamento fallito',
+        'Impossibile caricare ${_selectedFile!.name}',
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error uploading file: ${e.toString()}')),
+        SnackBar(
+            content: Text('Errore nel caricamento del file: ${e.toString()}')),
       );
     } finally {
       if (mounted) {
@@ -170,12 +174,12 @@ class _AddMaterialScreenState extends State<AddMaterialScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add New Material'),
+        title: const Text('Aggiungi nuovo materiale'),
         actions: [
           IconButton(
             icon: const Icon(Icons.check),
             onPressed: _isUploading ? null : _submitMaterial,
-            tooltip: 'Confirm',
+            tooltip: 'Conferma',
           ),
         ],
       ),
@@ -189,13 +193,13 @@ class _AddMaterialScreenState extends State<AddMaterialScreen> {
               TextFormField(
                 controller: _titleController,
                 decoration: const InputDecoration(
-                  labelText: 'Title*',
+                  labelText: 'Titolo*',
                   border: OutlineInputBorder(),
-                  hintText: 'Enter a descriptive title',
+                  hintText: 'Inserisci un titolo descrittivo',
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter a title for the material';
+                    return 'Per favore inserisci un titolo per il materiale';
                   }
                   return null;
                 },
@@ -204,15 +208,15 @@ class _AddMaterialScreenState extends State<AddMaterialScreen> {
               TextFormField(
                 controller: _descriptionController,
                 decoration: const InputDecoration(
-                  labelText: 'Description (optional)',
+                  labelText: 'Descrizione (opzionale)',
                   border: OutlineInputBorder(),
-                  hintText: 'Add detailed description',
+                  hintText: 'Aggiungi una descrizione dettagliata',
                 ),
                 maxLines: 3,
               ),
               const SizedBox(height: 24),
               const Text(
-                'Material Type',
+                'Tipo di materiale',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
@@ -240,7 +244,7 @@ class _AddMaterialScreenState extends State<AddMaterialScreen> {
               const SizedBox(height: 24),
               ElevatedButton.icon(
                 icon: const Icon(Icons.attach_file),
-                label: const Text('Select File'),
+                label: const Text('Seleziona un file'),
                 onPressed: _selectFile,
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 48),
@@ -289,14 +293,14 @@ class _AddMaterialScreenState extends State<AddMaterialScreen> {
                                 _isPlaying ? Icons.pause : Icons.play_arrow,
                               ),
                               onPressed: _togglePlayback,
-                              tooltip: _isPlaying ? 'Pause' : 'Play',
+                              tooltip: _isPlaying ? 'Pausa' : 'Riproduci',
                             ),
                         ],
                       ),
                       if (_fileType == FileType.audio) ...[
                         const SizedBox(height: 8),
                         const Text(
-                          'Audio preview:',
+                          'Anteprima audio:',
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 4),
@@ -317,7 +321,7 @@ class _AddMaterialScreenState extends State<AddMaterialScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Uploading: ${(_uploadProgress * 100).toStringAsFixed(0)}%',
+                  'Caricamento: ${(_uploadProgress * 100).toStringAsFixed(0)}%',
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 14),
                 ),
@@ -325,19 +329,19 @@ class _AddMaterialScreenState extends State<AddMaterialScreen> {
               ],
               const Divider(),
               const Text(
-                'Information:',
+                'Informazioni:',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(
                 _fileType == FileType.audio
-                    ? 'Supported audio formats: MP3, WAV, AAC'
-                    : 'Supported document formats: PDF',
+                    ? 'Formati audio supportati: MP3, WAV, AAC'
+                    : 'Formati documento supportati: PDF',
                 style: TextStyle(color: Colors.grey.shade600),
               ),
               const SizedBox(height: 4),
               Text(
-                'Maximum size: 25 MB',
+                'Dimensione massima: 25 MB',
                 style: TextStyle(color: Colors.grey.shade600),
               ),
             ],
