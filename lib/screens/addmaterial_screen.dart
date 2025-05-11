@@ -24,7 +24,6 @@ class _AddMaterialScreenState extends State<AddMaterialScreen> {
   AudioPlayer? _audioPlayer;
   bool _isPlaying = false;
 
-  // Notification plugin
   final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
@@ -58,12 +57,7 @@ class _AddMaterialScreenState extends State<AddMaterialScreen> {
     const NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
 
-    await _notificationsPlugin.show(
-      0,
-      title,
-      body,
-      platformChannelSpecifics,
-    );
+    await _notificationsPlugin.show(0, title, body, platformChannelSpecifics);
   }
 
   @override
@@ -76,7 +70,6 @@ class _AddMaterialScreenState extends State<AddMaterialScreen> {
 
   Future<void> _selectFile() async {
     try {
-      // Request storage permission
       final status = await Permission.storage.request();
       if (!status.isGranted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -87,6 +80,7 @@ class _AddMaterialScreenState extends State<AddMaterialScreen> {
 
       final result = await FilePicker.platform.pickFiles(
         type: _fileType,
+        allowedExtensions: _fileType == FileType.custom ? ['pdf'] : null,
         allowMultiple: false,
         dialogTitle: 'Select a file',
       );
@@ -130,8 +124,6 @@ class _AddMaterialScreenState extends State<AddMaterialScreen> {
     });
 
     try {
-      // Simulate file upload with progress
-      // In a real app, you would upload to your server here
       const totalSteps = 10;
       for (int i = 0; i <= totalSteps; i++) {
         await Future.delayed(const Duration(milliseconds: 200));
@@ -140,7 +132,6 @@ class _AddMaterialScreenState extends State<AddMaterialScreen> {
         });
       }
 
-      // Show success notification
       await _showNotification(
         'Upload Complete',
         '${_selectedFile!.name} has been added successfully',
@@ -150,10 +141,8 @@ class _AddMaterialScreenState extends State<AddMaterialScreen> {
         const SnackBar(content: Text('Material added successfully!')),
       );
 
-      // Navigate back after successful upload
       if (mounted) Navigator.pop(context);
     } catch (e) {
-      // Show error notification
       await _showNotification(
         'Upload Failed',
         'Failed to upload ${_selectedFile!.name}',
