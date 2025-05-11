@@ -61,6 +61,7 @@ class _ChapterScreenState extends ConsumerState<ChapterScreen> {
   final PdfViewerController _pdfViewerController = PdfViewerController();
   String _selectedText = '';
   bool _isDrawerOpen = false;
+  bool _isNotesOpen = false;
   bool _isGeneratingQuestions = false;
   Offset? _tapPosition;
 
@@ -199,34 +200,57 @@ class _ChapterScreenState extends ConsumerState<ChapterScreen> {
     return Scaffold(
       backgroundColor: AppColors.darkBackground,
       appBar: AppBar(
-        title: Text(widget.chapterTitle, 
-          style: TextStyle(color: AppColors.textLight),
-        ),
         backgroundColor: AppColors.cardDark,
         iconTheme: IconThemeData(color: AppColors.textLight),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.zoom_in),
-            onPressed: () {
-              _pdfViewerController.zoomLevel = _pdfViewerController.zoomLevel + 0.25;
-            },
+        title: Text(
+          widget.chapterTitle,
+          style: TextStyle(color: AppColors.textLight),
+        ),
+        centerTitle: true, // Per centrare il titolo
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(50), // Altezza della barra in basso per i pulsanti
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 50), // Distanziamento orizzontale per centrare
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Pulsante Zoom In
+                IconButton(
+                  icon: Icon(Icons.zoom_in),
+                  onPressed: () {
+                    setState(() {
+                      _pdfViewerController.zoomLevel = _pdfViewerController.zoomLevel + 0.25;
+                    });
+                  },
+                ),
+                // Pulsante Zoom Out
+                IconButton(
+                  icon: Icon(Icons.zoom_out),
+                  onPressed: () {
+                    setState(() {
+                      _pdfViewerController.zoomLevel = _pdfViewerController.zoomLevel - 0.25;
+                    });
+                  },
+                ),
+                // Pulsante per le note (icona foglietto)
+                IconButton(
+                  icon: Icon(Icons.note_alt), // Icona foglietto per le note
+                  onPressed: () {
+                    setState(() {
+                      _isNotesOpen = !_isNotesOpen;
+                      // Se apriamo le note, chiudiamo il drawer delle domande (facoltativo)
+                      if (_isNotesOpen && _isDrawerOpen) {
+                        _isDrawerOpen = false;
+                      }
+                    });
+                  },
+                ),
+              ],
+            ),
           ),
-          IconButton(
-            icon: Icon(Icons.zoom_out),
-            onPressed: () {
-              _pdfViewerController.zoomLevel = _pdfViewerController.zoomLevel - 0.25;
-            },
-          ),
-          IconButton(
-            icon: Icon(Icons.question_answer),
-            onPressed: () {
-              setState(() {
-                _isDrawerOpen = !_isDrawerOpen;
-              });
-            },
-          ),
-        ],
+        ),
       ),
+
       body: Padding(
         padding: EdgeInsets.all(16.0), // Padding attorno al contenuto
         child: Row(
@@ -246,7 +270,7 @@ class _ChapterScreenState extends ConsumerState<ChapterScreen> {
                   ],
                 ),
                 margin: EdgeInsets.only(
-                  right: _isDrawerOpen && !isMobile ? 16 : 0,
+                  right: (_isDrawerOpen || _isNotesOpen) && !isMobile ? 16 : 0,
                 ),
                 // Clipping per mantenere i bordi arrotondati
                 child: ClipRRect(
@@ -298,16 +322,38 @@ class _ChapterScreenState extends ConsumerState<ChapterScreen> {
                 margin: EdgeInsets.only(left: 0),
                 child: _buildQuestionsDrawer(questions),
               ),
+              
+            // Drawer per le note
+            if (_isNotesOpen && !isMobile)
+              AnimatedContainer(
+                duration: Duration(milliseconds: 300),
+                width: 350,
+                decoration: BoxDecoration(
+                  color: AppColors.cardDark,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 10,
+                      offset: Offset(-3, 0),
+                    ),
+                  ],
+                ),
+                margin: EdgeInsets.only(left: 0),
+                child: _buildNotesDrawer(),
+              ),
           ],
         ),
       ),
       
       // Drawer mobile (viene mostrato come overlay)
-      endDrawer: isMobile && _isDrawerOpen
+      endDrawer: isMobile && (_isDrawerOpen || _isNotesOpen)
           ? Drawer(
               child: Container(
                 color: AppColors.cardDark,
-                child: _buildQuestionsDrawer(questions),
+                child: _isDrawerOpen 
+                    ? _buildQuestionsDrawer(questions)
+                    : _buildNotesDrawer(),
               ),
             )
           : null,
@@ -527,6 +573,165 @@ class _ChapterScreenState extends ConsumerState<ChapterScreen> {
                 },
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotesDrawer() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.primaryBlue.withOpacity(0.2),
+              border: Border(
+                bottom: BorderSide(color: AppColors.border, width: 1),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Note del Capitolo',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textLight,
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.close, color: AppColors.textMedium),
+                  onPressed: () {
+                    setState(() {
+                      _isNotesOpen = false;
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+          
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildNoteSection(
+                    title: 'Concetti Importanti',
+                    content: 'In questo capitolo vengono trattati i seguenti concetti fondamentali:\n'
+                        '• Principi di base\n'
+                        '• Metodologie avanzate\n'
+                        '• Applicazioni pratiche\n'
+                        '• Casi di studio',
+                    icon: Icons.lightbulb_outline,
+                    color: Colors.amber,
+                  ),
+                  SizedBox(height: 20),
+                  _buildNoteSection(
+                    title: 'Punti da Ricordare',
+                    content: '1. Le formule a pagina 42 sono essenziali per gli esercizi.\n'
+                        '2. Collegare il concetto X con il principio Y visto nel capitolo precedente.\n'
+                        '3. La sezione 3.4 contiene informazioni che saranno utili per la comprensione del prossimo capitolo.',
+                    icon: Icons.check_circle_outline,
+                    color: Colors.green,
+                  ),
+                  SizedBox(height: 20),
+                  _buildNoteSection(
+                    title: 'Domande per la Revisione',
+                    content: '- Come si collega il tema principale con gli argomenti visti in precedenza?\n'
+                        '- Quali sono le implicazioni pratiche delle teorie esposte?\n'
+                        '- In che modo questi concetti si applicano nel contesto moderno?',
+                    icon: Icons.help_outline,
+                    color: Colors.deepPurple,
+                  ),
+                  SizedBox(height: 20),
+                  _buildNoteSection(
+                    title: 'Appunti Personali',
+                    content: 'Rivedere la parte relativa alla sezione 2.3 prima dell\'esame. '
+                        'Cercare esempi aggiuntivi online per chiarire il concetto discusso a pagina 57. '
+                        'Collegare con gli appunti della lezione del 15 Marzo.',
+                    icon: Icons.edit_note,
+                    color: AppColors.primaryBlue,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          // Pulsante per aggiungere una nuova nota
+          Padding(
+            padding: EdgeInsets.all(16),
+            child: ElevatedButton(
+              onPressed: () {
+                // Qui andrebbe la logica per aggiungere una nuova nota
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryBlue,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.add),
+                  SizedBox(width: 8),
+                  Text('Aggiungi Nota'),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper widget per creare le sezioni delle note
+  Widget _buildNoteSection({
+    required String title,
+    required String content,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Container(
+      padding: EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.4), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: color, size: 20),
+              SizedBox(width: 8),
+              Text(
+                title,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 8),
+          Text(
+            content,
+            style: TextStyle(
+              color: AppColors.textLight,
+              height: 1.5,
+            ),
           ),
         ],
       ),
