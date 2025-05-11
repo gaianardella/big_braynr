@@ -42,85 +42,130 @@ class StudySession {
 }
 
 // Providers
-final currentWeekProvider = StateProvider<DateTime>((ref) => DateTime.now());
+final currentWeekProvider = StateProvider<DateTime>((ref) {
+  // Impostare la data al 12 maggio 2025
+  return DateTime(2025, 5, 12);
+});
 
 final studySessionsProvider = StateProvider<List<StudySession>>((ref) {
-  final now = DateTime.now();
+  // Utilizziamo il 12 maggio 2025 come data di riferimento per le sessioni di studio
+  final startDate = DateTime(2025, 5, 12);
+  
   return [
     StudySession(
       id: '1',
       title: 'Capitolo 3 - Cinematica',
-      courseId: 'physics', // changed 'fisica' to 'physics'
-      day: now,
+      courseId: 'physics',
+      day: startDate, // 12 maggio
       time: const TimeOfDay(hour: 10, minute: 0),
       duration: const Duration(hours: 2),
     ),
     StudySession(
       id: '2',
       title: 'Esercizi di Algebra',
-      courseId: 'math', // changed 'matematica' to 'math'
-      day: now,
+      courseId: 'math',
+      day: startDate,
       time: const TimeOfDay(hour: 14, minute: 0),
       duration: const Duration(hours: 1, minutes: 30),
     ),
     StudySession(
       id: '3',
       title: 'Panoramica della Seconda Guerra Mondiale',
-      courseId: 'history', // changed 'storia' to 'history'
-      day: now.add(const Duration(days: 1)),
+      courseId: 'history',
+      day: startDate.add(const Duration(days: 1)), // 13 maggio
       time: const TimeOfDay(hour: 9, minute: 30),
       duration: const Duration(hours: 1),
     ),
     StudySession(
       id: '4',
       title: 'Strutture Dati',
-      courseId: 'cs', // changed 'informatica' to 'cs'
-      day: now.add(const Duration(days: 2)),
+      courseId: 'cs',
+      day: startDate.add(const Duration(days: 2)), // 14 maggio
       time: const TimeOfDay(hour: 11, minute: 0),
       duration: const Duration(hours: 2),
     ),
     StudySession(
       id: '5',
       title: 'Geometria Analitica',
-      courseId: 'math', // changed 'matematica' to 'math'
-      day: now.add(const Duration(days: 3)),
+      courseId: 'math',
+      day: startDate.add(const Duration(days: 3)), // 15 maggio
       time: const TimeOfDay(hour: 15, minute: 0),
       duration: const Duration(hours: 1, minutes: 15),
     ),
     StudySession(
       id: '6',
       title: 'Leggi del Moto',
-      courseId: 'physics', // changed 'fisica' to 'physics'
-      day: now.add(const Duration(days: 4)),
+      courseId: 'physics',
+      day: startDate.add(const Duration(days: 4)), // 16 maggio
       time: const TimeOfDay(hour: 10, minute: 0),
       duration: const Duration(hours: 2),
     ),
     StudySession(
       id: '7',
       title: 'Rivoluzione Industriale',
-      courseId: 'history', // changed 'storia' to 'history'
-      day: now.add(const Duration(days: 5)),
+      courseId: 'history',
+      day: startDate.add(const Duration(days: 5)), // 17 maggio
       time: const TimeOfDay(hour: 14, minute: 30),
       duration: const Duration(hours: 1, minutes: 30),
     ),
     StudySession(
       id: '8',
       title: 'Algoritmi di Ordinamento',
-      courseId: 'cs', // changed 'informatica' to 'cs'
-      day: now.add(const Duration(days: 6)),
+      courseId: 'cs',
+      day: startDate.add(const Duration(days: 6)), // 18 maggio
       time: const TimeOfDay(hour: 16, minute: 0),
       duration: const Duration(hours: 1),
     ),
     StudySession(
       id: '9',
       title: 'Equazioni Differenziali',
-      courseId: 'math', // changed 'matematica' to 'math'
-      day: now.add(const Duration(days: 6)),
+      courseId: 'math',
+      day: startDate.add(const Duration(days: 6)), // 18 maggio
       time: const TimeOfDay(hour: 18, minute: 0),
       duration: const Duration(hours: 1, minutes: 30),
     ),
   ];
 });
+
+// Painter per disegnare la codina del fumetto più realistica
+class _BubbleTrianglePainter extends CustomPainter {
+  final Color color;
+  
+  _BubbleTrianglePainter(this.color);
+  
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    
+    // Creiamo un percorso più curvato per la codina
+    final path = Path();
+    
+    // Punto iniziale a sinistra
+    path.moveTo(size.width * 0.2, 0);
+    
+    // Punto centrale in basso (la punta della codina)
+    path.quadraticBezierTo(
+      size.width * 0.5, size.height * 1.5, // punto di controllo
+      size.width * 0, size.height * 0.8, // punto finale 
+    );
+    
+    // Curva che torna verso l'alto e verso destra
+    path.quadraticBezierTo(
+      size.width * 0.5, size.height * 0.8, // punto di controllo
+      size.width * 0.8, 0, // punto finale tornando al fumetto
+    );
+    
+    // Chiudiamo il percorso
+    path.close();
+    
+    canvas.drawPath(path, paint);
+  }
+  
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
 
 class StudyPlannerScreen extends ConsumerWidget {
   const StudyPlannerScreen({super.key});
@@ -131,19 +176,29 @@ class StudyPlannerScreen extends ConsumerWidget {
     final studySessions = ref.watch(studySessionsProvider);
 
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildWeekHeader(context, ref, currentWeek),
-            const SizedBox(height: 16),
-            Expanded(
-              child: _buildWeekView(context, ref, currentWeek, studySessions),
+      body: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildWeekHeader(context, ref, currentWeek),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: _buildWeekView(context, ref, currentWeek, studySessions),
+                ),
+                _buildAddSessionButton(context, ref),
+              ],
             ),
-            _buildAddSessionButton(context, ref),
-          ],
-        ),
+          ),
+          // Aggiungiamo l'immagine e il fumetto in basso a destra
+          Positioned(
+            right: 20,
+            bottom: 70,
+            child: _buildBrainWithMessage(),
+          ),
+        ],
       ),
     );
   }
@@ -380,6 +435,64 @@ class StudyPlannerScreen extends ConsumerWidget {
         // Add session logic here
       },
       child: const Text('Aggiungi Sessione'),
+    );
+  }
+  
+  // Widget per l'immagine del cervello con il fumetto
+  Widget _buildBrainWithMessage() {
+    // Messaggio fisso
+    const String message = 'Ho organizzato la settimana per farti studiare al meglio!';
+    
+    return Container(
+      width: 200,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Fumetto con il messaggio
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,  // Sfondo bianco
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Text(
+              message,
+              style: const TextStyle(
+                color: Colors.black,  // Testo nero
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          
+          // Codina del fumetto posizionata verso il basso, a destra
+          Align(
+            alignment: Alignment.centerRight,
+            child: Padding(
+              padding: EdgeInsets.only(right: 40),
+              child: CustomPaint(
+                size: const Size(30, 25),  // Dimensione aumentata per la codina
+                painter: _BubbleTrianglePainter(Colors.white),
+              ),
+            ),
+          ),
+          
+          // Immagine del cervello
+          Image.asset(
+            'assets/images/brain.png',
+            width: 100,
+            height: 100,
+          ),
+        ],
+      ),
     );
   }
 }
