@@ -5,6 +5,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/providers/course_providers.dart';
 import '../course_model.dart';
 import '../audioplayer_screen.dart';
+import '../conceptualmap_screen.dart'; // Importiamo il ConceptualMapScreen
 
 // Modello per le lezioni
 class LessonModel {
@@ -593,6 +594,24 @@ class ChapterProgressScreen extends ConsumerWidget {
                         ),
                       ),
 
+                      // New: Generate Concept Map button
+                      IconButton(
+                        icon: Icon(
+                          Icons.account_tree_outlined,
+                          color: chapter.color,
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context); // Close the dialog
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ConceptualMapScreen(),
+                            ),
+                          );
+                        },
+                        tooltip: 'Generate Conceptual Map',
+                      ),
+
                       // Expand/collapse icon
                       Icon(
                         isExpanded
@@ -694,6 +713,84 @@ class ChapterProgressScreen extends ConsumerWidget {
     );
   }
 
+  void _showConceptMapDialog(BuildContext context, ChapterModel chapter) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Conceptual Map: ${chapter.title}',
+          style: TextStyle(color: chapter.color),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Placeholder for the concept map visualization
+            Container(
+              height: 200,
+              decoration: BoxDecoration(
+                color: chapter.color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.account_tree,
+                      size: 48,
+                      color: chapter.color,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Concept Map Visualization',
+                      style: TextStyle(
+                        color: chapter.color,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'This would show a generated conceptual map of the chapter content, '
+              'with key concepts and their relationships.',
+              style: TextStyle(color: AppColors.textMedium),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: chapter.color,
+            ),
+            onPressed: () {
+              // Here you would implement the actual concept map generation
+              // For now, we'll just show a snackbar
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content:
+                      Text('Generating conceptual map for ${chapter.title}...'),
+                  backgroundColor: chapter.color,
+                ),
+              );
+            },
+            child: const Text(
+              'Generate',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildLessonsList(BuildContext context, ChapterModel chapter) {
     // Container per le lezioni che appare quando il capitolo è espanso
     return AnimatedContainer(
@@ -724,95 +821,93 @@ class ChapterProgressScreen extends ConsumerWidget {
   }
 
   Widget _buildLessonItem(
-    BuildContext context, LessonModel lesson, Color chapterColor) {
-  // Icona in base al tipo di lezione
-  IconData lessonIcon;
-  switch (lesson.type) {
-    case 'Video':
-      lessonIcon = Icons.play_circle_outline;
-      break;
-    case 'Quiz':
-      lessonIcon = Icons.quiz_outlined;
-      break;
-    case 'Documento':
-      lessonIcon = Icons.article_outlined;
-      break;
-    case 'Esercizio':
-      lessonIcon = Icons.assignment_outlined;
-      break;
-    case 'Testo':
-      lessonIcon = Icons.text_snippet_outlined;
-      break;
-    default:
-      lessonIcon = Icons.book_outlined;
-  }
-
+      BuildContext context, LessonModel lesson, Color chapterColor) {
+    // Icona in base al tipo di lezione
+    IconData lessonIcon;
+    switch (lesson.type) {
+      case 'Video':
+        lessonIcon = Icons.play_circle_outline;
+        break;
+      case 'Quiz':
+        lessonIcon = Icons.quiz_outlined;
+        break;
+      case 'Documento':
+        lessonIcon = Icons.article_outlined;
+        break;
+      case 'Esercizio':
+        lessonIcon = Icons.assignment_outlined;
+        break;
+      case 'Testo':
+        lessonIcon = Icons.text_snippet_outlined;
+        break;
+      default:
+        lessonIcon = Icons.book_outlined;
+    }
 
     return ListTile(
-    contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-    leading: Container(
-      width: 36,
-      height: 36,
-      decoration: BoxDecoration(
-        color: chapterColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
+      contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+      leading: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: chapterColor.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(
+          lessonIcon,
+          color: chapterColor,
+          size: 20,
+        ),
       ),
-      child: Icon(
-        lessonIcon,
-        color: chapterColor,
-        size: 20,
+      title: Text(
+        lesson.title,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color:
+              lesson.isCompleted ? AppColors.textLight : AppColors.textMedium,
+          decoration: lesson.isCompleted ? TextDecoration.none : null,
+        ),
       ),
-    ),
-    title: Text(
-      lesson.title,
-      style: TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
-        color:
-            lesson.isCompleted ? AppColors.textLight : AppColors.textMedium,
-        decoration: lesson.isCompleted ? TextDecoration.none : null,
+      subtitle: Text(
+        '${lesson.type} · ${_formatDuration(lesson.duration)}',
+        style: const TextStyle(
+          fontSize: 12,
+          color: AppColors.textMedium,
+        ),
       ),
-    ),
-    subtitle: Text(
-      '${lesson.type} · ${_formatDuration(lesson.duration)}',
-      style: const TextStyle(
-        fontSize: 12,
-        color: AppColors.textMedium,
-      ),
-    ),
-    trailing: lesson.isCompleted
-        ? Icon(
-            Icons.check_circle,
-            color: chapterColor,
-            size: 20,
-          )
-        : Icon(
-            Icons.arrow_forward_ios,
-            color: AppColors.textMedium,
-            size: 16,
-          ),
-    onTap: () {
-      // Implementazione della navigazione in base al tipo di lezione
-      if (lesson.type == 'Video') {
-        // Navigare a AudioPlayerScreen per tutte le lezioni di tipo Video
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => AudioPlayerScreen(
+      trailing: lesson.isCompleted
+          ? Icon(
+              Icons.check_circle,
+              color: chapterColor,
+              size: 20,
+            )
+          : Icon(
+              Icons.arrow_forward_ios,
+              color: AppColors.textMedium,
+              size: 16,
             ),
-          ),
-        );
-      } else {
-        // Per altre lezioni, puoi implementare una logica diversa o mostrare un messaggio
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Navigazione a ${lesson.type} - ${lesson.title}'),
-            duration: const Duration(seconds: 1),
-          ),
-        );
-      }
-    },
-  );
-}
+      onTap: () {
+        // Implementazione della navigazione in base al tipo di lezione
+        if (lesson.type == 'Video') {
+          // Navigare a AudioPlayerScreen per tutte le lezioni di tipo Video
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => AudioPlayerScreen(),
+            ),
+          );
+        } else {
+          // Per altre lezioni, puoi implementare una logica diversa o mostrare un messaggio
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Navigazione a ${lesson.type} - ${lesson.title}'),
+              duration: const Duration(seconds: 1),
+            ),
+          );
+        }
+      },
+    );
+  }
 
   String _formatLastStudied(DateTime date) {
     final now = DateTime.now();
