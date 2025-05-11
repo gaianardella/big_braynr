@@ -171,18 +171,6 @@ class _ChapterScreenState extends ConsumerState<ChapterScreen> {
     // Aggiungi le domande generate al provider
     ref.read(generatedQuestionsProvider.notifier).addQuestions(generatedQuestions);
     
-    // Mostra una notifica di successo
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Domande generate con successo!'),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        duration: Duration(seconds: 2),
-      ),
-    );
   } catch (e) {
     debugPrint('Errore durante la generazione delle domande: $e');
     ScaffoldMessenger.of(context).showSnackBar(
