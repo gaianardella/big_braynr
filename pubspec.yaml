@@ -47,7 +47,10 @@ dependencies:
   googleapis_auth: ^1.6.0
   permission_handler: ^10.4.0
   flutter_local_notifications: ^15.1.1
-
+  webview_flutter: ^4.11.0
+  google_generative_ai: ^0.4.7
+  flutter_markdown: ^0.6.0
+  pdf: ^3.8.1
 
 dev_dependencies:
   flutter_test:
@@ -68,4 +71,5 @@ flutter:
     - assets/images/
     - assets/pdf/
     - assets/audio/
+    - assets/city_game/
     - .env

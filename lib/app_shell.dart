@@ -7,7 +7,7 @@ import 'screens/library_screen.dart';
 import 'screens/planning_screen.dart';
 import 'screens/videoplayer_screen.dart';
 import 'screens/dashboard_screen.dart';
-// import 'features/map/screens/map_screen.dart';
+import 'screens/city_game_screen.dart';
 import 'shared/widgets/app_sidebar.dart';
 import 'shared/widgets/app_topbar.dart';
 import 'screens/course_model.dart';
@@ -33,6 +33,13 @@ final coursesProvider = Provider<List<CourseModel>>((ref) {
       icon: Icons.science,
       color: Colors.deepPurple,
     ),
+    CourseModel(
+      id: 'city',
+      name: 'Città',
+      icon: Icons.location_city,
+      color: Colors.amber,
+    ),
+
   ];
 });
 
@@ -141,8 +148,8 @@ class AppShell extends ConsumerWidget {
         return const LibraryScreen();
       case 'planner':
         return const StudyPlannerScreen();
-      // case 'map':
-      //   return const MapScreen();
+      case 'city':  // Aggiungi questo case per gestire la sezione 'city'
+        return const CityGameScreen();
       default:
         return const LibraryScreen();
     }
@@ -150,52 +157,59 @@ class AppShell extends ConsumerWidget {
 
   // Barra di navigazione inferiore per mobile
   Widget _buildBottomNavBar(
-      BuildContext context, String selectedSection, WidgetRef ref) {
-    return Container(
-      height: 70,
-      decoration: BoxDecoration(
-        color: AppColors.cardDark,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 5,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _BottomNavItem(
-            icon: Icons.book_outlined,
-            label: 'Libreria',
-            isSelected: selectedSection == 'library',
-            onTap: () {
-              // Deseleziona qualsiasi corso quando si torna alla libreria
-              if (ref.read(selectedCourseProvider) != null) {
-                ref.read(selectedCourseProvider.notifier).state = null;
-              }
-              ref.read(selectedSectionProvider.notifier).state = 'library';
-            },
-          ),
-          _BottomNavItem(
-            icon: Icons.calendar_today_outlined,
-            label: 'Planner',
-            isSelected: selectedSection == 'planner',
-            onTap: () =>
-                ref.read(selectedSectionProvider.notifier).state = 'planner',
-          ),
-          _BottomNavItem(
-            icon: Icons.map_outlined,
-            label: 'Mappa',
-            isSelected: selectedSection == 'map',
-            onTap: () =>
-                ref.read(selectedSectionProvider.notifier).state = 'map',
-          ),
-        ],
-      ),
-    );
-  }
+    BuildContext context, String selectedSection, WidgetRef ref) {
+  return Container(
+    height: 70,
+    decoration: BoxDecoration(
+      color: AppColors.cardDark,
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.2),
+          blurRadius: 5,
+          offset: const Offset(0, -2),
+        ),
+      ],
+    ),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        _BottomNavItem(
+          icon: Icons.book_outlined,
+          label: 'Libreria',
+          isSelected: selectedSection == 'library',
+          onTap: () {
+            // Deseleziona qualsiasi corso quando si torna alla libreria
+            if (ref.read(selectedCourseProvider) != null) {
+              ref.read(selectedCourseProvider.notifier).state = null;
+            }
+            ref.read(selectedSectionProvider.notifier).state = 'library';
+          },
+        ),
+        _BottomNavItem(
+          icon: Icons.calendar_today_outlined,
+          label: 'Planner',
+          isSelected: selectedSection == 'planner',
+          onTap: () =>
+              ref.read(selectedSectionProvider.notifier).state = 'planner',
+        ),
+        _BottomNavItem(
+          icon: Icons.location_city,
+          label: 'Città',
+          isSelected: selectedSection == 'city',
+          onTap: () =>
+              ref.read(selectedSectionProvider.notifier).state = 'city',
+        ),
+        _BottomNavItem(
+          icon: Icons.map_outlined,
+          label: 'Mappa',
+          isSelected: selectedSection == 'map',
+          onTap: () =>
+              ref.read(selectedSectionProvider.notifier).state = 'map',
+        ),
+      ],
+    ),
+  );
+}
 
   // Floating Action Button personalizzato per ogni sezione
   Widget? _buildFloatingActionButton(
@@ -928,15 +942,17 @@ class _BottomNavItem extends StatelessWidget {
 
   // Ottiene il colore appropriato per ciascuna sezione
   Color _getColorForLabel(String label) {
-    switch (label) {
-      case 'Libreria':
-        return AppColors.primaryBlue;
-      case 'Planner':
-        return AppColors.notes;
-      case 'Mappa':
-        return AppColors.mindMaps;
-      default:
-        return AppColors.primaryBlue;
-    }
+  switch (label) {
+    case 'Libreria':
+      return AppColors.primaryBlue;
+    case 'Planner':
+      return AppColors.notes;
+    case 'Città':
+      return Colors.amber;
+    case 'Mappa':
+      return AppColors.mindMaps;
+    default:
+      return AppColors.primaryBlue;
   }
+}
 }
