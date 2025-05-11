@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/providers/course_providers.dart';
-import 'dashboard_screens/book_screen.dart'; // Importa la schermata dei materiali
-import 'dashboard_screens/chapter_screen.dart'; // Importa la schermata dei capitoli
-// import '../data/pdf_materials_data.dart'; // Importa il file dei dati mockati
+import 'dashboard_screens/book_screen.dart';
+import 'dashboard_screens/chapter_screen.dart';
+import 'addmaterial_screen.dart'; // Import the Add Material screen
 
 // Define the providers
 final completionPercentageProvider =
@@ -34,15 +34,15 @@ class DashboardScreen extends ConsumerWidget {
     final courses = ref.watch(coursesProvider);
 
     // Get the selected course's icon and id
-    final selectedCourseInfo = courses
-        .firstWhere(
-          (course) => course.id == selectedCourse,
-          orElse: () => courses.first,
-        );
+    final selectedCourseInfo = courses.firstWhere(
+      (course) => course.id == selectedCourse,
+      orElse: () => courses.first,
+    );
     final selectedCourseIcon = selectedCourseInfo.icon;
 
-    // Ottieni una citazione motivazionale (potrebbe venire da un provider)
-    const quote = "L'esperto in qualsiasi cosa è stato una volta un principiante.";
+    // Ottieni una citazione motivazionale
+    const quote =
+        "L'esperto in qualsiasi cosa è stato una volta un principiante.";
     const author = "Helen Hayes";
 
     return Scaffold(
@@ -54,28 +54,45 @@ class DashboardScreen extends ConsumerWidget {
           children: [
             const SizedBox(height: 16),
 
-            // Header
-            const Text(
-              'Dashboard di Studio',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textLight,
-              ),
+            // Header with Risorse button
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Dashboard di Studio',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textLight,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.library_add, size: 28),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const AddMaterialScreen(),
+                      ),
+                    );
+                  },
+                  tooltip: 'Aggiungi risorse',
+                  color: AppColors.textLight,
+                ),
+              ],
             ),
 
             const SizedBox(height: 24),
 
-            // Main statistics grid - reso più compatto
+            // Main statistics grid
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               crossAxisCount: 2,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
-              childAspectRatio: 2.0, // Reso più piccolo (prima era 1.4)
+              childAspectRatio: 2.0,
               children: [
-                // Completion Percentage Card con navigazione alla pagina dei materiali
+                // Completion Percentage Card
                 _buildCompactStatCard(
                   context,
                   title: 'Materiale Completato',
@@ -85,10 +102,10 @@ class DashboardScreen extends ConsumerWidget {
                   progress: completionPercentage,
                   description: 'del corso attuale',
                   onTap: () {
-                    // Naviga alla pagina dei materiali (book_screen)
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => ChapterProgressScreen(courseId: selectedCourseInfo.id),
+                        builder: (context) => ChapterProgressScreen(
+                            courseId: selectedCourseInfo.id),
                       ),
                     );
                   },
@@ -103,39 +120,33 @@ class DashboardScreen extends ConsumerWidget {
                   color: Colors.redAccent,
                   progress: studyStreak / 7,
                   description: 'giorni consecutivi',
+                  onTap: () {},
+                ),
+
+                // Chapter Progress Card
+                _buildCompactStatCard(
+                  context,
+                  title: 'Progresso Capitolo',
+                  value: '${(chapterProgress * 100).toStringAsFixed(0)}%',
+                  icon: Icons.book,
+                  color: Colors.greenAccent,
+                  progress: chapterProgress,
+                  description: 'completato',
                   onTap: () {
-                    // Nessuna navigazione specifica
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => ChapterScreen(
+                          pdfPath:
+                              'assets/pdf/Proposal_Google_Summer_of_Code.pdf',
+                        ),
+                      ),
+                    );
                   },
                 ),
 
-                // Chapter Progress Card con navigazione a StudyWorkspaceScreen
-                // Nel metodo _buildCompactStatCard dentro DashboardScreen
-_buildCompactStatCard(
-  context,
-  title: 'Progresso Capitolo',
-  value: '${(chapterProgress * 100).toStringAsFixed(0)}%',
-  icon: Icons.book,
-  color: Colors.greenAccent,
-  progress: chapterProgress,
-  description: 'completato',
-  onTap: () {
-    // Naviga a PDFViewerScreen passando il percorso del PDF specifico
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => ChapterScreen(
-          pdfPath: 'assets/pdf/Proposal_Google_Summer_of_Code.pdf', // Sostituisci con il percorso del tuo PDF
-        ),
-      ),
-    );
-  },
-),
-
                 // Daily Activity Card
                 _buildCombinedProgressAndActivities(
-                  context, 
-                  dailyActivity, 
-                  todayPlannedActivities
-                ),
+                    context, dailyActivity, todayPlannedActivities),
               ],
             ),
 
@@ -245,11 +256,8 @@ _buildCompactStatCard(
     );
   }
 
-  Widget _buildCombinedProgressAndActivities(
-    BuildContext context,
-    double dailyActivity, 
-    List<Map<String, String>> activities
-  ) {
+  Widget _buildCombinedProgressAndActivities(BuildContext context,
+      double dailyActivity, List<Map<String, String>> activities) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -266,7 +274,7 @@ _buildCompactStatCard(
           ),
         ],
       ),
-      padding: const EdgeInsets.all(12), // Ridotto padding
+      padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -278,9 +286,7 @@ _buildCompactStatCard(
               color: Colors.white,
             ),
           ),
-          const SizedBox(height: 8), // Ridotto spazio
-
-          // Progress Section
+          const SizedBox(height: 8),
           Row(
             children: [
               Expanded(
@@ -292,7 +298,7 @@ _buildCompactStatCard(
                       'Obiettivo Giornaliero',
                       style: TextStyle(
                         color: Colors.white70,
-                        fontSize: 12, // Ridotto font
+                        fontSize: 12,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -300,21 +306,21 @@ _buildCompactStatCard(
                       '${(dailyActivity * 100).toStringAsFixed(0)}% completato',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 14, // Ridotto font
+                        fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 8), // Ridotto spazio
+                    const SizedBox(height: 8),
                     LinearProgressIndicator(
                       value: dailyActivity,
                       backgroundColor: Colors.white24,
                       color: Colors.white,
-                      minHeight: 6, // Ridotto altezza
+                      minHeight: 6,
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 12), // Ridotto spazio
+              const SizedBox(width: 12),
               Expanded(
                 flex: 2,
                 child: Column(
@@ -324,7 +330,7 @@ _buildCompactStatCard(
                       'Tempo Studiato',
                       style: TextStyle(
                         color: Colors.white70,
-                        fontSize: 12, // Ridotto font
+                        fontSize: 12,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -332,7 +338,7 @@ _buildCompactStatCard(
                       '${(dailyActivity * 2).toStringAsFixed(1)}/2 ore',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 14, // Ridotto font
+                        fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -341,10 +347,7 @@ _buildCompactStatCard(
               ),
             ],
           ),
-
-          const SizedBox(height: 12), // Ridotto spazio
-
-          // Mostro solo un'attività per risparmiare spazio
+          const SizedBox(height: 12),
           if (activities.isNotEmpty)
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -361,8 +364,8 @@ _buildCompactStatCard(
                 Row(
                   children: [
                     Container(
-                      width: 4, // Più sottile
-                      height: 20, // Più corto
+                      width: 4,
+                      height: 20,
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(2),

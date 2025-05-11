@@ -31,9 +31,10 @@ class LibraryScreen extends ConsumerWidget {
       ),
     );
   }
-  
+
   // Griglia dei corsi
-  Widget _buildCourseGrid(BuildContext context, List<CourseModel> courses, WidgetRef ref) {
+  Widget _buildCourseGrid(
+      BuildContext context, List<CourseModel> courses, WidgetRef ref) {
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -48,9 +49,7 @@ class LibraryScreen extends ConsumerWidget {
                 color: AppColors.textLight,
               ),
             ),
-            
             const SizedBox(height: 24),
-            
             Expanded(
               child: GridView.builder(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -71,9 +70,10 @@ class LibraryScreen extends ConsumerWidget {
       ),
     );
   }
-  
+
   // Cartella del corso nella griglia
-  Widget _buildCourseFolder(BuildContext context, CourseModel course, WidgetRef ref) {
+  Widget _buildCourseFolder(
+      BuildContext context, CourseModel course, WidgetRef ref) {
     return GestureDetector(
       onTap: () {
         // Imposta il corso selezionato
@@ -111,9 +111,7 @@ class LibraryScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  
                   const SizedBox(height: 16),
-                  
                   Text(
                     course.name,
                     style: TextStyle(
@@ -124,9 +122,7 @@ class LibraryScreen extends ConsumerWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  
                   const SizedBox(height: 8),
-                  
                   const Text(
                     '24 Risorse',
                     style: TextStyle(
@@ -137,7 +133,6 @@ class LibraryScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            
             Positioned(
               top: 0,
               right: 0,
@@ -158,22 +153,24 @@ class LibraryScreen extends ConsumerWidget {
       ),
     );
   }
-  
+
   // Nuova funzione che combina l'header del corso con la dashboard
-  Widget _buildCourseWithDashboard(BuildContext context, CourseModel course, WidgetRef ref) {
+  Widget _buildCourseWithDashboard(
+      BuildContext context, CourseModel course, WidgetRef ref) {
     return Column(
       children: [
         // Header con il nome del corso
         _buildHeader(course, ref),
-        
+
         // Contenuto della dashboard
         Expanded(
-          child: const DashboardScreen(), // Richiamo direttamente la DashboardScreen esistente
+          child:
+              const DashboardScreen(), // Richiamo direttamente la DashboardScreen esistente
         ),
       ],
     );
   }
-  
+
   // Header con il nome del corso (versione semplificata)
   Widget _buildHeader(CourseModel course, WidgetRef ref) {
     return Padding(

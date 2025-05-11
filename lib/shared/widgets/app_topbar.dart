@@ -5,12 +5,12 @@ import '../../core/theme/app_colors.dart';
 /// Adattabile sia per layout mobile che desktop, con stile Braynr.
 class AppTopBar extends StatelessWidget {
   final bool isMobile;
-  
+
   const AppTopBar({
     super.key,
     this.isMobile = false,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -33,17 +33,17 @@ class AppTopBar extends StatelessWidget {
         children: [
           // Parte sinistra: Logo e titolo
           _buildLeftSection(context),
-          
-          // Parte centrale: Barra di ricerca (solo desktop)
-          if (!isMobile) _buildSearchBar(),
-          
+
+          // Spacer to push the right section to the far right
+          const Spacer(),
+
           // Parte destra: Icone azioni e avatar
           _buildRightSection(context),
         ],
       ),
     );
   }
-  
+
   // Costruisce la sezione sinistra della barra superiore
   Widget _buildLeftSection(BuildContext context) {
     return Row(
@@ -59,51 +59,23 @@ class AppTopBar extends StatelessWidget {
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
           ),
-        
+
         if (isMobile) const SizedBox(width: 16),
-        
+
         // Logo Braynr dall'immagine assets
         // Image.asset(
-        //   'assets/images/braynr_logo.png', 
+        //   'assets/images/braynr_logo.png',
         //   height: 36,
         //   // Assicura che il logo abbia un aspetto buono su sfondo scuro
         //   filterQuality: FilterQuality.high,
         // ),
-        
-        // Rimuoviamo il Container con l'icona e il testo "BraynR Studio" 
+
+        // Rimuoviamo il Container con l'icona e il testo "BraynR Studio"
         // poiché li stiamo sostituendo con il logo dell'immagine
       ],
     );
   }
-  
-  // Costruisce la barra di ricerca
-  Widget _buildSearchBar() {
-    return Expanded(
-      child: Center(
-        child: Container(
-          width: 300,
-          height: 40,
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: AppColors.backgroundGrey,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: TextField(
-            style: const TextStyle(color: AppColors.textLight),
-            decoration: const InputDecoration(
-              hintText: 'Cerca',
-              hintStyle: TextStyle(color: AppColors.textMedium),
-              prefixIcon: Icon(Icons.search, color: AppColors.textMedium),
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(vertical: 8),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-  
+
   // Costruisce la sezione destra della barra superiore
   Widget _buildRightSection(BuildContext context) {
     return Row(
@@ -111,20 +83,22 @@ class AppTopBar extends StatelessWidget {
         // Icone azioni (solo desktop)
         if (!isMobile) ...[
           IconButton(
-            icon: const Icon(Icons.notifications_outlined, color: AppColors.textLight),
+            icon: const Icon(Icons.notifications_outlined,
+                color: AppColors.textLight),
             onPressed: () {
               // Azione notifiche
             },
           ),
           IconButton(
-            icon: const Icon(Icons.settings_outlined, color: AppColors.textLight),
+            icon:
+                const Icon(Icons.settings_outlined, color: AppColors.textLight),
             onPressed: () {
               // Azione impostazioni
             },
           ),
           const SizedBox(width: 8),
         ],
-        
+
         // Avatar utente
         _UserAvatar(),
       ],
