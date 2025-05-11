@@ -42,80 +42,85 @@ class StudySession {
 }
 
 // Providers
-final currentWeekProvider = StateProvider<DateTime>((ref) => DateTime.now());
+final currentWeekProvider = StateProvider<DateTime>((ref) {
+  // Impostare la data al 12 maggio 2025
+  return DateTime(2025, 5, 12);
+});
 
 final studySessionsProvider = StateProvider<List<StudySession>>((ref) {
-  final now = DateTime.now();
+  // Utilizziamo il 12 maggio 2025 come data di riferimento per le sessioni di studio
+  final startDate = DateTime(2025, 5, 12);
+  
   return [
     StudySession(
       id: '1',
       title: 'Capitolo 3 - Cinematica',
-      courseId: 'physics', // changed 'fisica' to 'physics'
-      day: now,
+      courseId: 'physics',
+      day: startDate, // 12 maggio
       time: const TimeOfDay(hour: 10, minute: 0),
       duration: const Duration(hours: 2),
     ),
     StudySession(
       id: '2',
       title: 'Esercizi di Algebra',
-      courseId: 'math', // changed 'matematica' to 'math'
-      day: now,
+      courseId: 'math',
+      day: startDate,
       time: const TimeOfDay(hour: 14, minute: 0),
       duration: const Duration(hours: 1, minutes: 30),
     ),
     StudySession(
       id: '3',
       title: 'Panoramica della Seconda Guerra Mondiale',
-      courseId: 'history', // changed 'storia' to 'history'
-      day: now.add(const Duration(days: 1)),
+      courseId: 'history',
+      day: startDate.add(const Duration(days: 1)), // 13 maggio
       time: const TimeOfDay(hour: 9, minute: 30),
       duration: const Duration(hours: 1),
     ),
     StudySession(
       id: '4',
       title: 'Strutture Dati',
-      courseId: 'cs', // changed 'informatica' to 'cs'
-      day: now.add(const Duration(days: 2)),
+      courseId: 'cs',
+      day: startDate.add(const Duration(days: 2)), // 14 maggio
       time: const TimeOfDay(hour: 11, minute: 0),
       duration: const Duration(hours: 2),
     ),
     StudySession(
       id: '5',
       title: 'Geometria Analitica',
-      courseId: 'math', // changed 'matematica' to 'math'
-      day: now.add(const Duration(days: 3)),
+      courseId: 'math',
+      day: startDate.add(const Duration(days: 3)), // 15 maggio
       time: const TimeOfDay(hour: 15, minute: 0),
       duration: const Duration(hours: 1, minutes: 15),
     ),
     StudySession(
       id: '6',
       title: 'Leggi del Moto',
-      courseId: 'physics', // changed 'fisica' to 'physics'
-      day: now.add(const Duration(days: 4)),
+      courseId: 'physics',
+      day: startDate.add(const Duration(days: 4)), // 16 maggio
       time: const TimeOfDay(hour: 10, minute: 0),
       duration: const Duration(hours: 2),
     ),
     StudySession(
       id: '7',
       title: 'Rivoluzione Industriale',
-      courseId: 'history', // changed 'storia' to 'history'
-      day: now.add(const Duration(days: 5)),
+      courseId: 'history',
+      day: startDate.add(const Duration(days: 5)), // 17 maggio
       time: const TimeOfDay(hour: 14, minute: 30),
       duration: const Duration(hours: 1, minutes: 30),
     ),
     StudySession(
       id: '8',
       title: 'Algoritmi di Ordinamento',
-      courseId: 'cs', // changed 'informatica' to 'cs'
-      day: now.add(const Duration(days: 6)),
+      courseId: 'cs',
+      day: startDate.add(const Duration(days: 6)), // 18 maggio
       time: const TimeOfDay(hour: 16, minute: 0),
       duration: const Duration(hours: 1),
     ),
     StudySession(
       id: '9',
       title: 'Equazioni Differenziali',
-      courseId: 'math', // changed 'matematica' to 'math'
-      day: now.add(const Duration(days: 6)),
+      courseId: 'math',
+      day: startDate.add(const Duration(days: 6)), // 18 maggio
       time: const TimeOfDay(hour: 18, minute: 0),
       duration: const Duration(hours: 1, minutes: 30),
     ),
